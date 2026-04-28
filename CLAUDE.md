@@ -134,3 +134,8 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [ ] `npm run dev` — verify homepage, sections, articles, dark mode
 - [ ] Go to `/admin` — sign in, test article CRUD and comment moderation
 - [ ] Deploy to Vercel — add env vars in Vercel dashboard
+
+
+## Changelog
+
+- [2026-04-28] init: Antardrishti magazine — Next.js + Firebase backend with admin panel
