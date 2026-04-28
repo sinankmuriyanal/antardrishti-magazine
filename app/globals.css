@@ -1,0 +1,2 @@
+/* Minimal reset — UIKit handles all styling for public pages; Tailwind handles admin */
+*, *::before, *::after { box-sizing: border-box; }
