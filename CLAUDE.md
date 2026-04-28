@@ -139,3 +139,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 ## Changelog
 
 - [2026-04-28] init: Antardrishti magazine — Next.js + Firebase backend with admin panel
+- [2026-04-28] docs(changelog): sync 2026-04-28
