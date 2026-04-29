@@ -143,3 +143,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-04-29] update: app/(public)/layout.tsx,app/layout.tsx,next.config.ts,scripts/extract_docx.py,scripts/migrate_html.py
 - [2026-04-29] deploy: add Vercel env seeding script and .vercel gitignore entry
 - [2026-04-29] fix: serve all public pages via Firebase Admin SDK, remove boilerplate root page
+- [2026-04-29] fix: disable UIKit page preloader, extend ISR cache to 1 hour
