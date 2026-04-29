@@ -5,7 +5,7 @@ import { ListArticleCard } from "@/components/public/ArticleCard";
 import type { Metadata } from "next";
 import type { Article } from "@/types";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 interface Props { params: Promise<{ slug: string }> }
 

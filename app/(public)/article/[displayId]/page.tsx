@@ -4,7 +4,7 @@ import { getSectionByNumber } from "@/lib/sections";
 import { CommentSection } from "@/components/public/CommentSection";
 import type { Metadata } from "next";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 interface Props { params: Promise<{ displayId: string }> }
 

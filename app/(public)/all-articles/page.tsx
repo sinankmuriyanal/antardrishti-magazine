@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import type { Article } from "@/types";
 
 export const metadata: Metadata = { title: "All Articles" };
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function AllArticlesPage({ searchParams }: { searchParams: Promise<{ section?: string }> }) {
   const { section: sectionFilter } = await searchParams;

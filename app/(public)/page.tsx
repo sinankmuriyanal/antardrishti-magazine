@@ -3,7 +3,7 @@ import { SECTIONS_DATA, getSectionByNumber } from "@/lib/sections";
 import { HeroArticleCard, MediumArticleCard, ListArticleCard } from "@/components/public/ArticleCard";
 import type { Article } from "@/types";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function HomePage() {
   let articles: Article[] = [];
