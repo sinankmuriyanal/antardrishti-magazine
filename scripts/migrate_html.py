@@ -130,7 +130,7 @@ def main():
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(articles, f, ensure_ascii=False, indent=2)
 
-    print(f"\nDone! {len(articles)} articles → {out_path}")
+    print(f"\nDone! {len(articles)} articles -> {out_path}")
     print("Next step: run scripts/import_to_firestore.js")
 
 

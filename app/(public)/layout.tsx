@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import "./public.css";
 
 export const metadata: Metadata = {
   title: { default: "Antardrishti", template: "%s | Antardrishti" },
