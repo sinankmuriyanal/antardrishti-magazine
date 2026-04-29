@@ -5,13 +5,10 @@ import {
   getDoc,
   query,
   where,
-  orderBy,
-  limit,
   addDoc,
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { Article } from "@/types";
@@ -26,12 +23,20 @@ export async function fetchArticles(opts?: {
     constraints.push(where("sectionNumber", "==", opts.sectionNumber));
   if (opts?.published !== undefined)
     constraints.push(where("isPublished", "==", opts.published));
-  constraints.push(orderBy("sectionNumber"), orderBy("articleNumber"));
-  if (opts?.limitTo) constraints.push(limit(opts.limitTo));
 
   const q = query(collection(db, "articles"), ...constraints);
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Article));
+  let articles = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Article));
+
+  // Sort client-side (31 articles — no composite index needed)
+  articles.sort((a, b) =>
+    a.sectionNumber !== b.sectionNumber
+      ? a.sectionNumber - b.sectionNumber
+      : a.articleNumber - b.articleNumber
+  );
+
+  if (opts?.limitTo) articles = articles.slice(0, opts.limitTo);
+  return articles;
 }
 
 export async function fetchArticleByDisplayId(displayId: string): Promise<Article | null> {
@@ -50,12 +55,17 @@ export async function fetchArticleById(id: string): Promise<Article | null> {
 export async function fetchLatestArticles(count = 6): Promise<Article[]> {
   const q = query(
     collection(db, "articles"),
-    where("isPublished", "==", true),
-    orderBy("publishedAt", "desc"),
-    limit(count)
+    where("isPublished", "==", true)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Article));
+  const articles = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Article));
+  return articles
+    .sort((a, b) => {
+      const aT = (a.publishedAt as unknown as { seconds: number })?.seconds ?? 0;
+      const bT = (b.publishedAt as unknown as { seconds: number })?.seconds ?? 0;
+      return bT - aT;
+    })
+    .slice(0, count);
 }
 
 export async function createArticle(data: Omit<Article, "id" | "createdAt" | "updatedAt">): Promise<string> {
@@ -81,12 +91,10 @@ export async function deleteArticle(id: string): Promise<void> {
 export async function getNextArticleNumber(sectionNumber: number): Promise<number> {
   const q = query(
     collection(db, "articles"),
-    where("sectionNumber", "==", sectionNumber),
-    orderBy("articleNumber", "desc"),
-    limit(1)
+    where("sectionNumber", "==", sectionNumber)
   );
   const snap = await getDocs(q);
   if (snap.empty) return 1;
-  const last = snap.docs[0].data() as Article;
-  return last.articleNumber + 1;
+  const nums = snap.docs.map((d) => (d.data() as Article).articleNumber);
+  return Math.max(...nums) + 1;
 }

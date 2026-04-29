@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { fetchArticleByDisplayId } from "@/lib/articles";
+import { fetchArticleByDisplayIdServer as fetchArticleByDisplayId } from "@/lib/articles-server";
 import { getSectionByNumber } from "@/lib/sections";
 import { CommentSection } from "@/components/public/CommentSection";
 import type { Metadata } from "next";

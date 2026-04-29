@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { fetchArticles } from "@/lib/articles";
+import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { getSectionBySlug } from "@/lib/sections";
 import { ListArticleCard } from "@/components/public/ArticleCard";
 import type { Metadata } from "next";

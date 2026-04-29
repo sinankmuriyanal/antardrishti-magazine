@@ -17,11 +17,15 @@ export async function fetchApprovedComments(articleId: string): Promise<Comment[
   const q = query(
     collection(db, "comments"),
     where("articleId", "==", articleId),
-    where("isApproved", "==", true),
-    orderBy("createdAt", "asc")
+    where("isApproved", "==", true)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Comment));
+  const comments = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Comment));
+  return comments.sort((a, b) => {
+    const aT = (a.createdAt as unknown as { seconds: number })?.seconds ?? 0;
+    const bT = (b.createdAt as unknown as { seconds: number })?.seconds ?? 0;
+    return aT - bT;
+  });
 }
 
 export async function fetchAllComments(): Promise<Comment[]> {

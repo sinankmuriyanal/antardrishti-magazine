@@ -1,4 +1,4 @@
-import { fetchArticles } from "@/lib/articles";
+import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { getSectionByNumber, SECTIONS_DATA } from "@/lib/sections";
 import { ListArticleCard } from "@/components/public/ArticleCard";
 import type { Metadata } from "next";

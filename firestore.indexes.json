@@ -1,0 +1,48 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPublished", "order": "ASCENDING" },
+        { "fieldPath": "sectionNumber", "order": "ASCENDING" },
+        { "fieldPath": "articleNumber", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sectionNumber", "order": "ASCENDING" },
+        { "fieldPath": "isPublished", "order": "ASCENDING" },
+        { "fieldPath": "articleNumber", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPublished", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sectionNumber", "order": "ASCENDING" },
+        { "fieldPath": "articleNumber", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "articleId", "order": "ASCENDING" },
+        { "fieldPath": "isApproved", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
