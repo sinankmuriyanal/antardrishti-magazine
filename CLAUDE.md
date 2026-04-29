@@ -140,3 +140,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 
 - [2026-04-28] init: Antardrishti magazine — Next.js + Firebase backend with admin panel
 - [2026-04-28] docs(changelog): sync 2026-04-28
+- [2026-04-29] update: app/(public)/layout.tsx,app/layout.tsx,next.config.ts,scripts/extract_docx.py,scripts/migrate_html.py
