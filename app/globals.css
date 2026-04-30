@@ -50,6 +50,32 @@ h1, h2, h3, h4, h5, h6,
   font-weight: 600 !important;
 }
 
+/* ─── Navbar — always dark, never transparent ─── */
+/* UIKit sets uc-navbar-transparent when not scrolled; we override to always show ink bg */
+.uc-center-navbar,
+.uc-navbar-transparent .uc-center-navbar,
+.uc-navbar-sticky .uc-center-navbar {
+  background: var(--color-ink, #0F1923) !important;
+}
+
+.uc-navbar-sticky .uc-center-navbar {
+  box-shadow: 0 2px 24px rgba(0,0,0,0.28) !important;
+}
+
+/* Ensure nav text is always white (overrides UIKit's dark-mode-only rule) */
+.uc-center-navbar .uc-navbar-nav > li > a,
+.uc-center-navbar .uc-navbar a,
+.uc-center-navbar .uc-logo a,
+.uc-center-navbar .uc-menu-trigger,
+.uc-center-navbar button,
+.uc-center-navbar a {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+.uc-center-navbar .uc-navbar-nav > li > a:hover {
+  color: white !important;
+}
+
 /* ─── Top Bar ─── */
 .uc-top-navbar {
   background: var(--color-ink) !important;
@@ -82,7 +108,27 @@ h1, h2, h3, h4, h5, h6,
   text-transform: uppercase !important;
 }
 
-/* ─── Article Cards — Image Hover ─── */
+/* ─── Article Cards — Rounded corners & hover ─── */
+.post.type-post,
+article.post.type-post {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+/* Image containers inside cards */
+.post.type-post .featured-image,
+.post.type-post > div:first-child {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+/* Section featured card — horizontal split */
+.post.type-post .row.g-0 {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+/* Image zoom on hover */
 .post.type-post .uc-transition-scale-up,
 article .uc-transition-scale-up {
   transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
@@ -91,6 +137,15 @@ article .uc-transition-scale-up {
 .post.type-post:hover .uc-transition-scale-up,
 article:hover .uc-transition-scale-up {
   transform: scale(1.06) !important;
+}
+
+/* Card shadow on hover */
+.post.type-post {
+  transition: box-shadow 0.3s ease, transform 0.3s ease !important;
+}
+
+.post.type-post:hover {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15) !important;
 }
 
 /* ─── Footer ─── */

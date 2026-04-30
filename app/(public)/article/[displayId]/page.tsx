@@ -189,7 +189,7 @@ export default async function ArticlePage({ params }: Props) {
                   </span>
                 )}
               </div>
-              {article.displayId && (
+              {section && (
                 <>
                   <span style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.9rem" }}>&middot;</span>
                   <span
@@ -197,10 +197,10 @@ export default async function ArticlePage({ params }: Props) {
                       fontFamily: "var(--font-body)",
                       fontSize: "0.72rem",
                       color: "rgba(255,255,255,0.35)",
-                      letterSpacing: "0.06em",
+                      letterSpacing: "0.04em",
                     }}
                   >
-                    Article {article.displayId}
+                    {section.name}
                   </span>
                 </>
               )}
@@ -213,14 +213,13 @@ export default async function ArticlePage({ params }: Props) {
           <div className="container max-w-xl mt-2 mb-4 lg:mb-6" style={{ position: "relative", zIndex: 1 }}>
             <figure
               className="featured-image m-0 overflow-hidden"
-              style={{ borderRadius: "6px", aspectRatio: "16/9", maxHeight: 520 }}
+              style={{ borderRadius: "14px", aspectRatio: "16/9", maxHeight: 520 }}
             >
+              {/* No data-uc-img here — UIKit lazy loading clears src without data-src fallback */}
               <img
-                className="media-cover image uc-transition-toggle uc-transition-scale-up"
                 src={article.featuredImage}
                 alt={article.title}
                 style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                data-uc-img="loading: lazy"
               />
             </figure>
           </div>

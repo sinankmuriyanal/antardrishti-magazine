@@ -16,6 +16,81 @@ interface Props {
   saving?: boolean;
 }
 
+const inputCls = "w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent bg-white text-gray-900 placeholder-gray-400";
+const labelCls = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl border p-5 space-y-4" style={{ borderColor: "#f0ece8" }}>
+      <h2 className="text-sm font-semibold text-gray-900 pb-3" style={{ borderBottom: "1px solid #f5f3f0" }}>
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function ImageUploadField({
+  label,
+  value,
+  onChange,
+  uploading,
+  onUpload,
+  shape = "rect",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  uploading: boolean;
+  onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  shape?: "rect" | "circle";
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="space-y-2">
+      <label className={labelCls}>{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={inputCls}
+        style={{ borderColor: "#e5e7eb", "--tw-ring-color": "#e8521d" } as React.CSSProperties}
+        placeholder="Paste URL or upload below"
+      />
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40"
+          style={{ borderColor: "#e8521d", color: "#e8521d", background: "#fef3f0" }}
+        >
+          {uploading ? "Uploading…" : "Upload file"}
+        </button>
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onUpload} />
+        {value && (
+          <a href={value} target="_blank" rel="noreferrer" className="text-xs text-gray-400 hover:text-gray-600">
+            Preview ↗
+          </a>
+        )}
+      </div>
+      {value && (
+        <img
+          src={value}
+          alt={label}
+          className="object-cover"
+          style={{
+            height: shape === "circle" ? 64 : 80,
+            width: shape === "circle" ? 64 : 128,
+            borderRadius: shape === "circle" ? "50%" : 8,
+            border: "1.5px solid #f0ece8",
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 export function ArticleForm({ initial, onSave, saving }: Props) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [sectionNumber, setSectionNumber] = useState(initial?.sectionNumber ?? 1);
@@ -30,9 +105,6 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
   const [uploadingAuthor, setUploadingAuthor] = useState(false);
   const [error, setError] = useState("");
-
-  const featuredInputRef = useRef<HTMLInputElement>(null);
-  const authorInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -67,7 +139,7 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     try {
       const url = await uploadImage(file, `articles/uploads/author-${Date.now()}-${file.name}`);
       setAuthorImage(url);
-    } catch { setError("Failed to upload author image."); }
+    } catch { setError("Failed to upload author photo."); }
     setUploadingAuthor(false);
   }
 
@@ -79,7 +151,8 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     const displayId = `${sectionNumber}.${articleNumber}`;
     const section = SECTIONS_DATA.find((s) => s.number === sectionNumber)!;
     const content = editor?.getHTML() ?? "";
-    const excerpt = editor?.getText().slice(0, 200) + "…";
+    const rawText = editor?.getText() ?? "";
+    const excerpt = rawText.length > 200 ? rawText.slice(0, 200) + "…" : rawText;
 
     await onSave({
       sectionId: section.id,
@@ -96,144 +169,224 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
       authorBio,
       tags: [],
       edition,
-      publishedAt: null,
+      publishedAt: isPublished ? (initial?.publishedAt ?? null) : null,
       isPublished,
     });
   }
 
-  const inputCls = "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const labelCls = "block text-sm font-medium text-gray-700 mb-1";
+  const toolbarBtns = [
+    { label: "B", title: "Bold", cmd: () => editor?.chain().focus().toggleBold().run(), active: () => editor?.isActive("bold") },
+    { label: "I", title: "Italic", cmd: () => editor?.chain().focus().toggleItalic().run(), active: () => editor?.isActive("italic") },
+    { label: "H2", title: "Heading 2", cmd: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), active: () => editor?.isActive("heading", { level: 2 }) },
+    { label: "H3", title: "Heading 3", cmd: () => editor?.chain().focus().toggleHeading({ level: 3 }).run(), active: () => editor?.isActive("heading", { level: 3 }) },
+    { label: "¶", title: "Paragraph", cmd: () => editor?.chain().focus().setParagraph().run(), active: () => editor?.isActive("paragraph") },
+    { label: "• List", title: "Bullet list", cmd: () => editor?.chain().focus().toggleBulletList().run(), active: () => editor?.isActive("bulletList") },
+    { label: "1. List", title: "Ordered list", cmd: () => editor?.chain().focus().toggleOrderedList().run(), active: () => editor?.isActive("orderedList") },
+    { label: "——", title: "Horizontal rule", cmd: () => editor?.chain().focus().setHorizontalRule().run(), active: () => false },
+  ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
-      {/* Basic info */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">Article details</h2>
+    <form onSubmit={handleSubmit} className="space-y-5 max-w-4xl">
 
+      {/* Article metadata */}
+      <FormSection title="Article details">
         <div>
-          <label className={labelCls}>Title *</label>
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} placeholder="Article title" required />
+          <label className={labelCls}>Title <span style={{ color: "#e8521d" }}>*</span></label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={inputCls}
+            style={{ borderColor: "#e5e7eb", fontSize: "1rem", fontWeight: 500 }}
+            placeholder="Article title"
+            required
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Section</label>
-            <select value={sectionNumber} onChange={(e) => setSectionNumber(parseInt(e.target.value))} className={inputCls}>
-              {SECTIONS_DATA.map((s) => <option key={s.id} value={s.number}>{s.number}. {s.name}</option>)}
+            <select
+              value={sectionNumber}
+              onChange={(e) => setSectionNumber(parseInt(e.target.value))}
+              className={inputCls}
+              style={{ borderColor: "#e5e7eb" }}
+            >
+              {SECTIONS_DATA.map((s) => (
+                <option key={s.id} value={s.number}>{s.number}. {s.name}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className={labelCls}>Article number</label>
-            <input type="number" value={articleNumber} onChange={(e) => setArticleNumber(parseInt(e.target.value))} min={1} className={inputCls} />
-            <p className="text-xs text-gray-400 mt-1">Display ID: {sectionNumber}.{articleNumber}</p>
+            <input
+              type="number"
+              value={articleNumber}
+              onChange={(e) => setArticleNumber(parseInt(e.target.value))}
+              min={1}
+              className={inputCls}
+              style={{ borderColor: "#e5e7eb" }}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Article ID: <span className="font-mono font-semibold text-gray-600">{sectionNumber}.{articleNumber}</span>
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
           <div>
             <label className={labelCls}>Edition</label>
-            <select value={edition} onChange={(e) => setEdition(parseInt(e.target.value) as 1 | 2)} className={inputCls}>
+            <select
+              value={edition}
+              onChange={(e) => setEdition(parseInt(e.target.value) as 1 | 2)}
+              className={inputCls}
+              style={{ borderColor: "#e5e7eb" }}
+            >
               <option value={1}>Edition 1</option>
               <option value={2}>Edition 2</option>
             </select>
           </div>
-          <div className="flex items-center gap-3 pt-6">
-            <input type="checkbox" id="published" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="w-4 h-4 rounded" />
-            <label htmlFor="published" className="text-sm text-gray-700">Published</label>
+          <div className="flex items-center gap-3 pb-2.5">
+            <div
+              className="relative inline-flex items-center cursor-pointer"
+              onClick={() => setIsPublished(!isPublished)}
+            >
+              <input type="checkbox" id="published" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="sr-only" />
+              <div
+                className="w-10 h-5 rounded-full transition-colors"
+                style={{ background: isPublished ? "#e8521d" : "#e5e7eb" }}
+              />
+              <div
+                className="absolute w-4 h-4 bg-white rounded-full shadow transition-transform"
+                style={{ transform: isPublished ? "translateX(1.25rem)" : "translateX(0.125rem)", top: "2px", left: 0 }}
+              />
+            </div>
+            <label htmlFor="published" className="text-sm text-gray-700 cursor-pointer select-none">
+              {isPublished ? "Published (live on site)" : "Draft (not visible)"}
+            </label>
           </div>
         </div>
-      </div>
+      </FormSection>
 
-      {/* Featured image */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="font-semibold text-gray-900">Featured image</h2>
-        <input type="text" value={featuredImage} onChange={(e) => setFeaturedImage(e.target.value)} className={inputCls} placeholder="Image URL or upload below" />
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => featuredInputRef.current?.click()} className="text-sm text-blue-600 hover:underline" disabled={uploadingFeatured}>
-            {uploadingFeatured ? "Uploading…" : "Upload image"}
-          </button>
-          <input ref={featuredInputRef} type="file" accept="image/*" className="hidden" onChange={handleFeaturedUpload} />
-        </div>
-        {featuredImage && <img src={featuredImage} alt="Featured" className="h-32 rounded-lg object-cover" />}
-      </div>
+      {/* Cover image */}
+      <FormSection title="Cover image">
+        <ImageUploadField
+          label="Featured / cover image"
+          value={featuredImage}
+          onChange={setFeaturedImage}
+          uploading={uploadingFeatured}
+          onUpload={handleFeaturedUpload}
+          shape="rect"
+        />
+      </FormSection>
 
       {/* Author */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="font-semibold text-gray-900">Author</h2>
-        <div className="grid grid-cols-2 gap-4">
+      <FormSection title="Author">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Author name</label>
-            <input type="text" value={authorName} onChange={(e) => setAuthorName(e.target.value)} className={inputCls} placeholder="Full name" />
+            <input
+              type="text"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              className={inputCls}
+              style={{ borderColor: "#e5e7eb" }}
+              placeholder="Full name"
+            />
           </div>
           <div>
             <label className={labelCls}>LinkedIn URL</label>
-            <input type="url" value={authorLinkedIn} onChange={(e) => setAuthorLinkedIn(e.target.value)} className={inputCls} placeholder="https://linkedin.com/in/..." />
+            <input
+              type="url"
+              value={authorLinkedIn}
+              onChange={(e) => setAuthorLinkedIn(e.target.value)}
+              className={inputCls}
+              style={{ borderColor: "#e5e7eb" }}
+              placeholder="https://linkedin.com/in/…"
+            />
           </div>
         </div>
         <div>
-          <label className={labelCls}>Author bio / designation</label>
-          <input type="text" value={authorBio} onChange={(e) => setAuthorBio(e.target.value)} className={inputCls} placeholder="MBA Business Analytics '25, DSE" />
+          <label className={labelCls}>Bio / designation</label>
+          <input
+            type="text"
+            value={authorBio}
+            onChange={(e) => setAuthorBio(e.target.value)}
+            className={inputCls}
+            style={{ borderColor: "#e5e7eb" }}
+            placeholder="MBA Business Analytics '25, DSE"
+          />
         </div>
-        <div>
-          <label className={labelCls}>Author photo</label>
-          <input type="text" value={authorImage} onChange={(e) => setAuthorImage(e.target.value)} className={inputCls} placeholder="Image URL or upload below" />
-          <div className="flex items-center gap-3 mt-2">
-            <button type="button" onClick={() => authorInputRef.current?.click()} className="text-sm text-blue-600 hover:underline" disabled={uploadingAuthor}>
-              {uploadingAuthor ? "Uploading…" : "Upload photo"}
-            </button>
-            <input ref={authorInputRef} type="file" accept="image/*" className="hidden" onChange={handleAuthorUpload} />
-          </div>
-          {authorImage && <img src={authorImage} alt="Author" className="h-20 w-20 rounded-full object-cover mt-2" />}
-        </div>
-      </div>
-
-      {/* Content editor */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="font-semibold text-gray-900 mb-3">Content</h2>
-
-        {/* Toolbar */}
-        <div className="flex flex-wrap gap-1 mb-3 border-b border-gray-200 pb-3">
-          {[
-            { label: "B", cmd: () => editor?.chain().focus().toggleBold().run(), active: editor?.isActive("bold") },
-            { label: "I", cmd: () => editor?.chain().focus().toggleItalic().run(), active: editor?.isActive("italic") },
-            { label: "H2", cmd: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), active: editor?.isActive("heading", { level: 2 }) },
-            { label: "H3", cmd: () => editor?.chain().focus().toggleHeading({ level: 3 }).run(), active: editor?.isActive("heading", { level: 3 }) },
-            { label: "¶", cmd: () => editor?.chain().focus().setParagraph().run(), active: editor?.isActive("paragraph") },
-            { label: "• List", cmd: () => editor?.chain().focus().toggleBulletList().run(), active: editor?.isActive("bulletList") },
-            { label: "1. List", cmd: () => editor?.chain().focus().toggleOrderedList().run(), active: editor?.isActive("orderedList") },
-            { label: "— Line", cmd: () => editor?.chain().focus().setHorizontalRule().run(), active: false },
-          ].map((btn) => (
-            <button
-              key={btn.label}
-              type="button"
-              onClick={btn.cmd}
-              className={`px-2 py-1 text-xs rounded border transition-colors ${btn.active ? "bg-blue-600 text-white border-blue-600" : "border-gray-300 text-gray-600 hover:bg-gray-100"}`}
-            >
-              {btn.label}
-            </button>
-          ))}
-        </div>
-
-        <EditorContent
-          editor={editor}
-          className="prose prose-sm max-w-none min-h-64 focus:outline-none border border-gray-200 rounded-lg p-3 text-gray-900"
+        <ImageUploadField
+          label="Author photo"
+          value={authorImage}
+          onChange={setAuthorImage}
+          uploading={uploadingAuthor}
+          onUpload={handleAuthorUpload}
+          shape="circle"
         />
-      </div>
+      </FormSection>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {/* Rich text editor */}
+      <FormSection title="Article content">
+        <div className="border rounded-lg overflow-hidden" style={{ borderColor: "#e5e7eb" }}>
+          {/* Toolbar */}
+          <div className="flex flex-wrap gap-1 p-2.5 border-b" style={{ borderColor: "#f0ece8", background: "#faf9f6" }}>
+            {toolbarBtns.map((btn) => (
+              <button
+                key={btn.label}
+                type="button"
+                onClick={btn.cmd}
+                title={btn.title}
+                className="px-2.5 py-1 text-xs rounded font-medium transition-colors"
+                style={
+                  btn.active?.()
+                    ? { background: "#e8521d", color: "white", border: "1px solid #e8521d" }
+                    : { border: "1px solid #e5e7eb", color: "#4b5563", background: "white" }
+                }
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
 
-      <div className="flex gap-3">
+          <EditorContent
+            editor={editor}
+            className="prose prose-sm max-w-none focus:outline-none p-4"
+            style={{ minHeight: 280, color: "#111827" }}
+          />
+        </div>
+      </FormSection>
+
+      {error && (
+        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3 border border-red-200">
+          <span>⚠</span>
+          {error}
+        </div>
+      )}
+
+      {/* Submit row */}
+      <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"
           disabled={saving}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+          className="text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-opacity disabled:opacity-50"
+          style={{ background: "#e8521d" }}
         >
           {saving ? "Saving…" : "Save article"}
         </button>
-        <a href="/admin/articles" className="px-6 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+        <a
+          href="/admin/articles"
+          className="px-6 py-2.5 border rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+          style={{ borderColor: "#e5e7eb" }}
+        >
           Cancel
         </a>
+        <span className="ml-auto text-xs text-gray-400">
+          {isPublished ? "Will be live after saving" : "Saving as draft"}
+        </span>
       </div>
+
     </form>
   );
 }

@@ -382,7 +382,7 @@ export function SectionFeaturedCard({ article, section }: { article: Article; se
               textTransform: "uppercase",
               color: "var(--color-primary)",
             }}>
-              {section.name} &middot; {article.displayId}
+              {section.name}
             </span>
           </div>
           <h2
