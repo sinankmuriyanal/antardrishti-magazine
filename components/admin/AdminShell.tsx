@@ -6,11 +6,13 @@ import { signInWithEmailAndPassword, signOut, onAuthStateChanged, type User } fr
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/admin",          label: "Dashboard", icon: "⊞" },
-  { href: "/admin/articles", label: "Articles",  icon: "◻" },
-  { href: "/admin/sections", label: "Sections",  icon: "≡" },
-  { href: "/admin/comments", label: "Comments",  icon: "◇" },
-  { href: "/admin/import",   label: "Import",    icon: "↑" },
+  { href: "/admin",                 label: "Dashboard",  icon: "⊞" },
+  { href: "/admin/articles",        label: "Articles",   icon: "◻" },
+  { href: "/admin/authors",         label: "Authors",    icon: "◉" },
+  { href: "/admin/sections",        label: "Sections",   icon: "≡" },
+  { href: "/admin/comments",        label: "Comments",   icon: "◇" },
+  { href: "/admin/import",          label: "Import",     icon: "↑" },
+  { href: "/admin/migrate-slugs",   label: "Slugs",      icon: "⟳" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

@@ -3,9 +3,9 @@ import {
   getDocs,
   doc,
   getDoc,
+  setDoc,
   query,
   where,
-  addDoc,
   updateDoc,
   deleteDoc,
   serverTimestamp,
@@ -46,6 +46,13 @@ export async function fetchArticleByDisplayId(displayId: string): Promise<Articl
   return { id: snap.docs[0].id, ...snap.docs[0].data() } as Article;
 }
 
+export async function fetchArticleBySlug(slug: string): Promise<Article | null> {
+  const q = query(collection(db, "articles"), where("slug", "==", slug));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() } as Article;
+}
+
 export async function fetchArticleById(id: string): Promise<Article | null> {
   const snap = await getDoc(doc(db, "articles", id));
   if (!snap.exists()) return null;
@@ -69,12 +76,13 @@ export async function fetchLatestArticles(count = 6): Promise<Article[]> {
 }
 
 export async function createArticle(data: Omit<Article, "id" | "createdAt" | "updatedAt">): Promise<string> {
-  const ref = await addDoc(collection(db, "articles"), {
+  const docRef = doc(db, "articles", data.displayId);
+  await setDoc(docRef, {
     ...data,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  return ref.id;
+  return data.displayId;
 }
 
 export async function updateArticle(id: string, data: Partial<Article>): Promise<void> {

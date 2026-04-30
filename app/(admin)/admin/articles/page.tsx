@@ -55,6 +55,11 @@ export default function ArticlesAdmin() {
     setArticles((prev) => prev.map((a) => a.id === article.id ? { ...a, isPublished: !a.isPublished } : a));
   }
 
+  async function toggleEditorsPick(article: Article) {
+    await updateDoc(doc(db, "articles", article.id), { isEditorsPick: !article.isEditorsPick });
+    setArticles((prev) => prev.map((a) => a.id === article.id ? { ...a, isEditorsPick: !a.isEditorsPick } : a));
+  }
+
   async function handleDelete(article: Article) {
     if (!confirm(`Delete "${article.title}"?\n\nThis cannot be undone.`)) return;
     await deleteDoc(doc(db, "articles", article.id));
@@ -189,6 +194,7 @@ export default function ArticlesAdmin() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden lg:table-cell">Author</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden xl:table-cell">Media</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Pick</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -292,11 +298,23 @@ export default function ArticlesAdmin() {
                           </button>
                         </td>
 
+                        {/* Editor's pick */}
+                        <td className="px-4 py-3 text-center hidden sm:table-cell">
+                          <button
+                            onClick={() => toggleEditorsPick(a)}
+                            title={a.isEditorsPick ? "Remove from editor's picks" : "Add to editor's picks"}
+                            className="text-base transition-colors"
+                            style={{ color: a.isEditorsPick ? "#f59e0b" : "#d1d5db" }}
+                          >
+                            ★
+                          </button>
+                        </td>
+
                         {/* Actions */}
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-3">
                             <a
-                              href={`/article/${a.displayId}`}
+                              href={`/article/${a.slug || a.displayId}`}
                               target="_blank"
                               rel="noreferrer"
                               className="text-xs text-gray-400 hover:text-gray-700 transition-colors"

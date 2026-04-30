@@ -15,7 +15,9 @@ export interface Article {
   sectionNumber: number;
   articleNumber: number;
   displayId: string; // e.g. "1.2"
+  slug: string; // e.g. "the-future-of-analytics"
   title: string;
+  subtitle?: string;
   excerpt: string;
   content: string; // HTML
   featuredImage: string;
@@ -23,10 +25,24 @@ export interface Article {
   authorImage: string;
   authorLinkedIn: string;
   authorBio: string;
+  authorId?: string; // ref to authors/{id} once authors collection is set up
   tags: string[];
   edition: 1 | 2;
+  readingTime?: number; // minutes
+  isEditorsPick?: boolean;
   publishedAt: Timestamp | null;
   isPublished: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface Author {
+  id: string;
+  name: string;
+  bio: string;
+  photo: string;
+  linkedin: string;
+  slug: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

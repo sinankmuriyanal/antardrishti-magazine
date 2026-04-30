@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageExtension from "@tiptap/extension-image";
@@ -8,6 +8,7 @@ import LinkExtension from "@tiptap/extension-link";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { SECTIONS_DATA } from "@/lib/sections";
+import { slugify, calcReadingTime } from "@/lib/utils";
 import type { Article } from "@/types";
 
 interface Props {
@@ -31,18 +32,10 @@ function FormSection({ title, children }: { title: string; children: React.React
 }
 
 function ImageUploadField({
-  label,
-  value,
-  onChange,
-  uploading,
-  onUpload,
-  shape = "rect",
+  label, value, onChange, uploading, onUpload, shape = "rect",
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  uploading: boolean;
-  onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  label: string; value: string; onChange: (v: string) => void;
+  uploading: boolean; onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   shape?: "rect" | "circle";
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -50,18 +43,13 @@ function ImageUploadField({
     <div className="space-y-2">
       <label className={labelCls}>{label}</label>
       <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={inputCls}
-        style={{ borderColor: "#e5e7eb", "--tw-ring-color": "#e8521d" } as React.CSSProperties}
+        type="text" value={value} onChange={(e) => onChange(e.target.value)}
+        className={inputCls} style={{ borderColor: "#e5e7eb" }}
         placeholder="Paste URL or upload below"
       />
       <div className="flex items-center gap-3">
         <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
+          type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
           className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40"
           style={{ borderColor: "#e8521d", color: "#e8521d", background: "#fef3f0" }}
         >
@@ -76,9 +64,7 @@ function ImageUploadField({
       </div>
       {value && (
         <img
-          src={value}
-          alt={label}
-          className="object-cover"
+          src={value} alt={label} className="object-cover"
           style={{
             height: shape === "circle" ? 64 : 80,
             width: shape === "circle" ? 64 : 128,
@@ -93,6 +79,9 @@ function ImageUploadField({
 
 export function ArticleForm({ initial, onSave, saving }: Props) {
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [slugLocked, setSlugLocked] = useState(!!initial?.slug);
+  const [subtitle, setSubtitle] = useState(initial?.subtitle ?? "");
   const [sectionNumber, setSectionNumber] = useState(initial?.sectionNumber ?? 1);
   const [articleNumber, setArticleNumber] = useState(initial?.articleNumber ?? 1);
   const [authorName, setAuthorName] = useState(initial?.authorName ?? "");
@@ -102,9 +91,17 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
   const [authorImage, setAuthorImage] = useState(initial?.authorImage ?? "");
   const [edition, setEdition] = useState<1 | 2>(initial?.edition ?? 2);
   const [isPublished, setIsPublished] = useState(initial?.isPublished ?? false);
+  const [isEditorsPick, setIsEditorsPick] = useState(initial?.isEditorsPick ?? false);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
   const [uploadingAuthor, setUploadingAuthor] = useState(false);
   const [error, setError] = useState("");
+
+  // Auto-generate slug from title unless user has manually edited it
+  useEffect(() => {
+    if (!slugLocked && title) {
+      setSlug(slugify(title));
+    }
+  }, [title, slugLocked]);
 
   const editor = useEditor({
     extensions: [
@@ -147,21 +144,26 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     e.preventDefault();
     setError("");
     if (!title.trim()) { setError("Title is required."); return; }
+    if (!slug.trim()) { setError("Slug is required."); return; }
 
     const displayId = `${sectionNumber}.${articleNumber}`;
     const section = SECTIONS_DATA.find((s) => s.number === sectionNumber)!;
     const content = editor?.getHTML() ?? "";
     const rawText = editor?.getText() ?? "";
     const excerpt = rawText.length > 200 ? rawText.slice(0, 200) + "…" : rawText;
+    const readingTime = calcReadingTime(content);
 
     await onSave({
       sectionId: section.id,
       sectionNumber,
       articleNumber,
       displayId,
+      slug,
       title,
+      subtitle,
       excerpt,
       content,
+      readingTime,
       featuredImage,
       authorName,
       authorImage,
@@ -169,6 +171,7 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
       authorBio,
       tags: [],
       edition,
+      isEditorsPick,
       publishedAt: isPublished ? (initial?.publishedAt ?? null) : null,
       isPublished,
     });
@@ -193,13 +196,44 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
         <div>
           <label className={labelCls}>Title <span style={{ color: "#e8521d" }}>*</span></label>
           <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={inputCls}
-            style={{ borderColor: "#e5e7eb", fontSize: "1rem", fontWeight: 500 }}
-            placeholder="Article title"
-            required
+            type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+            className={inputCls} style={{ borderColor: "#e5e7eb", fontSize: "1rem", fontWeight: 500 }}
+            placeholder="Article title" required
+          />
+        </div>
+
+        {/* Slug */}
+        <div>
+          <label className={labelCls}>URL slug <span style={{ color: "#e8521d" }}>*</span></label>
+          <div className="flex gap-2">
+            <input
+              type="text" value={slug}
+              onChange={(e) => { setSlug(e.target.value); setSlugLocked(true); }}
+              className={inputCls} style={{ borderColor: "#e5e7eb", fontFamily: "monospace" }}
+              placeholder="auto-generated-from-title"
+            />
+            <button
+              type="button"
+              onClick={() => { setSlugLocked(false); setSlug(slugify(title)); }}
+              className="text-xs px-3 py-2 rounded-lg border flex-shrink-0 transition-colors"
+              style={{ borderColor: "#e5e7eb", color: "#6b7280", background: "white" }}
+              title="Re-generate slug from title"
+            >
+              ↺ Reset
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            Public URL: <span className="font-mono text-gray-600">/article/{slug || "…"}</span>
+          </p>
+        </div>
+
+        {/* Subtitle */}
+        <div>
+          <label className={labelCls}>Subtitle <span className="text-gray-300 font-normal">(optional)</span></label>
+          <input
+            type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)}
+            className={inputCls} style={{ borderColor: "#e5e7eb" }}
+            placeholder="A short supporting sentence shown below the title"
           />
         </div>
 
@@ -207,10 +241,8 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
           <div>
             <label className={labelCls}>Section</label>
             <select
-              value={sectionNumber}
-              onChange={(e) => setSectionNumber(parseInt(e.target.value))}
-              className={inputCls}
-              style={{ borderColor: "#e5e7eb" }}
+              value={sectionNumber} onChange={(e) => setSectionNumber(parseInt(e.target.value))}
+              className={inputCls} style={{ borderColor: "#e5e7eb" }}
             >
               {SECTIONS_DATA.map((s) => (
                 <option key={s.id} value={s.number}>{s.number}. {s.name}</option>
@@ -220,12 +252,9 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
           <div>
             <label className={labelCls}>Article number</label>
             <input
-              type="number"
-              value={articleNumber}
+              type="number" value={articleNumber}
               onChange={(e) => setArticleNumber(parseInt(e.target.value))}
-              min={1}
-              className={inputCls}
-              style={{ borderColor: "#e5e7eb" }}
+              min={1} className={inputCls} style={{ borderColor: "#e5e7eb" }}
             />
             <p className="text-xs text-gray-400 mt-1">
               Article ID: <span className="font-mono font-semibold text-gray-600">{sectionNumber}.{articleNumber}</span>
@@ -233,36 +262,39 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div>
             <label className={labelCls}>Edition</label>
             <select
-              value={edition}
-              onChange={(e) => setEdition(parseInt(e.target.value) as 1 | 2)}
-              className={inputCls}
-              style={{ borderColor: "#e5e7eb" }}
+              value={edition} onChange={(e) => setEdition(parseInt(e.target.value) as 1 | 2)}
+              className={inputCls} style={{ borderColor: "#e5e7eb" }}
             >
               <option value={1}>Edition 1</option>
               <option value={2}>Edition 2</option>
             </select>
           </div>
+          {/* Published toggle */}
           <div className="flex items-center gap-3 pb-2.5">
-            <div
-              className="relative inline-flex items-center cursor-pointer"
-              onClick={() => setIsPublished(!isPublished)}
-            >
+            <div className="relative inline-flex items-center cursor-pointer" onClick={() => setIsPublished(!isPublished)}>
               <input type="checkbox" id="published" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} className="sr-only" />
-              <div
-                className="w-10 h-5 rounded-full transition-colors"
-                style={{ background: isPublished ? "#e8521d" : "#e5e7eb" }}
-              />
-              <div
-                className="absolute w-4 h-4 bg-white rounded-full shadow transition-transform"
-                style={{ transform: isPublished ? "translateX(1.25rem)" : "translateX(0.125rem)", top: "2px", left: 0 }}
-              />
+              <div className="w-10 h-5 rounded-full transition-colors" style={{ background: isPublished ? "#e8521d" : "#e5e7eb" }} />
+              <div className="absolute w-4 h-4 bg-white rounded-full shadow transition-transform"
+                style={{ transform: isPublished ? "translateX(1.25rem)" : "translateX(0.125rem)", top: "2px", left: 0 }} />
             </div>
             <label htmlFor="published" className="text-sm text-gray-700 cursor-pointer select-none">
-              {isPublished ? "Published (live on site)" : "Draft (not visible)"}
+              {isPublished ? "Published" : "Draft"}
+            </label>
+          </div>
+          {/* Editor's pick toggle */}
+          <div className="flex items-center gap-3 pb-2.5">
+            <div className="relative inline-flex items-center cursor-pointer" onClick={() => setIsEditorsPick(!isEditorsPick)}>
+              <input type="checkbox" id="editorsPick" checked={isEditorsPick} onChange={(e) => setIsEditorsPick(e.target.checked)} className="sr-only" />
+              <div className="w-10 h-5 rounded-full transition-colors" style={{ background: isEditorsPick ? "#f59e0b" : "#e5e7eb" }} />
+              <div className="absolute w-4 h-4 bg-white rounded-full shadow transition-transform"
+                style={{ transform: isEditorsPick ? "translateX(1.25rem)" : "translateX(0.125rem)", top: "2px", left: 0 }} />
+            </div>
+            <label htmlFor="editorsPick" className="text-sm text-gray-700 cursor-pointer select-none">
+              {isEditorsPick ? "★ Editor's pick" : "Editor's pick"}
             </label>
           </div>
         </div>
@@ -271,12 +303,8 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
       {/* Cover image */}
       <FormSection title="Cover image">
         <ImageUploadField
-          label="Featured / cover image"
-          value={featuredImage}
-          onChange={setFeaturedImage}
-          uploading={uploadingFeatured}
-          onUpload={handleFeaturedUpload}
-          shape="rect"
+          label="Featured / cover image" value={featuredImage} onChange={setFeaturedImage}
+          uploading={uploadingFeatured} onUpload={handleFeaturedUpload} shape="rect"
         />
       </FormSection>
 
@@ -286,58 +314,39 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
           <div>
             <label className={labelCls}>Author name</label>
             <input
-              type="text"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-              className={inputCls}
-              style={{ borderColor: "#e5e7eb" }}
-              placeholder="Full name"
+              type="text" value={authorName} onChange={(e) => setAuthorName(e.target.value)}
+              className={inputCls} style={{ borderColor: "#e5e7eb" }} placeholder="Full name"
             />
           </div>
           <div>
             <label className={labelCls}>LinkedIn URL</label>
             <input
-              type="url"
-              value={authorLinkedIn}
-              onChange={(e) => setAuthorLinkedIn(e.target.value)}
-              className={inputCls}
-              style={{ borderColor: "#e5e7eb" }}
-              placeholder="https://linkedin.com/in/…"
+              type="url" value={authorLinkedIn} onChange={(e) => setAuthorLinkedIn(e.target.value)}
+              className={inputCls} style={{ borderColor: "#e5e7eb" }} placeholder="https://linkedin.com/in/…"
             />
           </div>
         </div>
         <div>
           <label className={labelCls}>Bio / designation</label>
           <input
-            type="text"
-            value={authorBio}
-            onChange={(e) => setAuthorBio(e.target.value)}
-            className={inputCls}
-            style={{ borderColor: "#e5e7eb" }}
+            type="text" value={authorBio} onChange={(e) => setAuthorBio(e.target.value)}
+            className={inputCls} style={{ borderColor: "#e5e7eb" }}
             placeholder="MBA Business Analytics '25, DSE"
           />
         </div>
         <ImageUploadField
-          label="Author photo"
-          value={authorImage}
-          onChange={setAuthorImage}
-          uploading={uploadingAuthor}
-          onUpload={handleAuthorUpload}
-          shape="circle"
+          label="Author photo" value={authorImage} onChange={setAuthorImage}
+          uploading={uploadingAuthor} onUpload={handleAuthorUpload} shape="circle"
         />
       </FormSection>
 
       {/* Rich text editor */}
       <FormSection title="Article content">
         <div className="border rounded-lg overflow-hidden" style={{ borderColor: "#e5e7eb" }}>
-          {/* Toolbar */}
           <div className="flex flex-wrap gap-1 p-2.5 border-b" style={{ borderColor: "#f0ece8", background: "#faf9f6" }}>
             {toolbarBtns.map((btn) => (
               <button
-                key={btn.label}
-                type="button"
-                onClick={btn.cmd}
-                title={btn.title}
+                key={btn.label} type="button" onClick={btn.cmd} title={btn.title}
                 className="px-2.5 py-1 text-xs rounded font-medium transition-colors"
                 style={
                   btn.active?.()
@@ -349,27 +358,24 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
               </button>
             ))}
           </div>
-
           <EditorContent
             editor={editor}
             className="prose prose-sm max-w-none focus:outline-none p-4"
             style={{ minHeight: 280, color: "#111827" }}
           />
         </div>
+        <p className="text-xs text-gray-400">Reading time is calculated automatically from word count.</p>
       </FormSection>
 
       {error && (
         <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3 border border-red-200">
-          <span>⚠</span>
-          {error}
+          <span>⚠</span> {error}
         </div>
       )}
 
-      {/* Submit row */}
       <div className="flex items-center gap-3 pt-2">
         <button
-          type="submit"
-          disabled={saving}
+          type="submit" disabled={saving}
           className="text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-opacity disabled:opacity-50"
           style={{ background: "#e8521d" }}
         >
@@ -384,6 +390,7 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
         </a>
         <span className="ml-auto text-xs text-gray-400">
           {isPublished ? "Will be live after saving" : "Saving as draft"}
+          {isEditorsPick ? " · ★ Editor's pick" : ""}
         </span>
       </div>
 

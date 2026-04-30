@@ -147,3 +147,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-04-30] design: full professional redesign — Playfair Display + DM Sans fonts, deep navy (#0F1923) + warm cream palette, editorial article cards, refined header/footer, redesigned About Us with section cards, improved article reading typography and author bio, pill filter tabs on archive, dark sidebar admin shell with brand accent
 - [2026-04-30] docs(changelog): sync 2026-04-29
 - [2026-04-30] docs(changelog): sync 2026-04-30
+- [2026-04-30] update: (admin)/admin/articles/page.tsx,(admin)/admin/page.tsx,(public)/article/[displayId]/page.tsx,admin/ArticleForm.tsx,CLAUDE.md,globals.css

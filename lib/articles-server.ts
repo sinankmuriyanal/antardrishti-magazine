@@ -39,3 +39,12 @@ export async function fetchArticleByDisplayIdServer(displayId: string): Promise<
   if (snap.empty) return null;
   return { id: snap.docs[0].id, ...snap.docs[0].data() } as Article;
 }
+
+export async function fetchArticleBySlugServer(slug: string): Promise<Article | null> {
+  const snap = await adminDb
+    .collection("articles")
+    .where("slug", "==", slug)
+    .get();
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() } as Article;
+}
