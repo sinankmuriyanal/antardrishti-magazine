@@ -6,6 +6,26 @@ import type { Comment } from "@/types";
 
 interface Props { articleId: string }
 
+function formatDate(ts: { seconds: number } | null) {
+  if (!ts) return "";
+  return new Date(ts.seconds * 1000).toLocaleDateString("en-IN", {
+    day: "numeric", month: "short", year: "numeric",
+  });
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 14px",
+  fontFamily: "var(--font-body)",
+  fontSize: "0.9rem",
+  border: "1.5px solid var(--color-border, #E2DDD8)",
+  borderRadius: "4px",
+  background: "white",
+  color: "var(--color-text, #111318)",
+  outline: "none",
+  transition: "border-color 0.2s",
+};
+
 export function CommentSection({ articleId }: Props) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [name, setName] = useState("");
@@ -32,85 +52,213 @@ export function CommentSection({ articleId }: Props) {
     }
   }
 
-  function formatDate(ts: { seconds: number } | null) {
-    if (!ts) return "";
-    return new Date(ts.seconds * 1000).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  }
-
   return (
-    <div className="post-comments panel mt-6 pt-6 border-top">
-      <h3 className="h5 m-0 mb-4">
-        Comments {comments.length > 0 && <span className="opacity-50 fs-6">({comments.length})</span>}
-      </h3>
+    <div
+      className="post-comments panel mt-6 pt-6"
+      style={{ borderTop: "1px solid var(--color-border, #E2DDD8)" }}
+    >
+      {/* Header */}
+      <div className="hstack items-baseline gap-2 mb-5">
+        <h3
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "1.2rem",
+            fontWeight: 600,
+            margin: 0,
+            color: "var(--color-text)",
+          }}
+        >
+          Discussion
+        </h3>
+        {comments.length > 0 && (
+          <span
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "0.78rem",
+              color: "var(--color-muted)",
+            }}
+          >
+            {comments.length} comment{comments.length !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
 
       {/* Existing comments */}
       {comments.length > 0 && (
-        <div className="vstack gap-4 mb-6">
+        <div className="vstack gap-4 mb-7">
           {comments.map((c) => (
-            <div key={c.id} className="panel p-3 bg-gray-25 dark:bg-gray-800 rounded">
-              <div className="hstack justify-between mb-2">
-                <strong className="fs-6">{c.authorName}</strong>
-                <span className="fs-7 opacity-50">{formatDate(c.createdAt as unknown as { seconds: number })}</span>
+            <div
+              key={c.id}
+              style={{
+                padding: "1.1rem 1.25rem",
+                background: "var(--color-warm-bg, #FAF9F6)",
+                borderRadius: "6px",
+                border: "1px solid var(--color-border, #E2DDD8)",
+              }}
+            >
+              <div className="hstack justify-between items-center mb-2">
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 700,
+                    fontSize: "0.88rem",
+                    color: "var(--color-text)",
+                  }}
+                >
+                  {c.authorName}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.72rem",
+                    color: "var(--color-muted)",
+                  }}
+                >
+                  {formatDate(c.createdAt as unknown as { seconds: number })}
+                </span>
               </div>
-              <p className="fs-6 m-0">{c.content}</p>
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.9rem",
+                  lineHeight: 1.65,
+                  color: "#2a2d35",
+                  margin: 0,
+                }}
+              >
+                {c.content}
+              </p>
             </div>
           ))}
         </div>
       )}
 
       {/* Comment form */}
-      <div className="panel">
-        <h4 className="h6 mb-3">Leave a comment</h4>
+      <div>
+        <h4
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "var(--color-muted)",
+            margin: "0 0 1.25rem",
+          }}
+        >
+          Leave a comment
+        </h4>
+
         {status === "sent" ? (
-          <div className="panel p-3 bg-gray-25 dark:bg-gray-800 rounded text-center">
-            <p className="fs-6 m-0 text-success">
-              <i className="unicon-checkmark-circle me-1"></i>
-              Comment submitted! It will appear after moderation.
+          <div
+            style={{
+              padding: "1.25rem 1.5rem",
+              background: "#f0faf4",
+              borderRadius: "6px",
+              border: "1px solid #b7e4c7",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "0.9rem",
+                color: "#1e7e34",
+                margin: 0,
+              }}
+            >
+              Comment submitted — it will appear after moderation.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="vstack gap-3">
             <div className="row g-3">
               <div className="col-12 md:col-6">
+                <label
+                  className="comment-form-label"
+                  style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-muted)", display: "block", marginBottom: "6px" }}
+                >
+                  Name <span style={{ color: "var(--color-primary)" }}>*</span>
+                </label>
                 <input
                   type="text"
-                  className="form-control form-control-sm h-40px fs-6 bg-white dark:bg-gray-800 dark:border-white dark:border-opacity-15"
-                  placeholder="Your name *"
+                  placeholder="Your name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  style={inputStyle}
                   required
                 />
               </div>
               <div className="col-12 md:col-6">
+                <label
+                  style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-muted)", display: "block", marginBottom: "6px" }}
+                >
+                  Email <span style={{ color: "var(--color-muted)", fontWeight: 400 }}>(not published)</span>
+                </label>
                 <input
                   type="email"
-                  className="form-control form-control-sm h-40px fs-6 bg-white dark:bg-gray-800 dark:border-white dark:border-opacity-15"
-                  placeholder="Email (not published)"
+                  placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  style={inputStyle}
                 />
               </div>
             </div>
-            <textarea
-              className="form-control fs-6 bg-white dark:bg-gray-800 dark:border-white dark:border-opacity-15"
-              rows={4}
-              placeholder="Write your comment *"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
-            />
-            {status === "error" && (
-              <p className="fs-7 text-danger m-0">Something went wrong. Please try again.</p>
-            )}
             <div>
+              <label
+                style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-muted)", display: "block", marginBottom: "6px" }}
+              >
+                Comment <span style={{ color: "var(--color-primary)" }}>*</span>
+              </label>
+              <textarea
+                rows={4}
+                placeholder="Share your thoughts on this article…"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                style={{ ...inputStyle, resize: "vertical", minHeight: "110px" }}
+                required
+              />
+            </div>
+
+            {status === "error" && (
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.82rem",
+                  color: "#c0392b",
+                  margin: 0,
+                }}
+              >
+                Something went wrong. Please try again.
+              </p>
+            )}
+
+            <div className="hstack gap-3 items-center">
               <button
                 type="submit"
-                className="btn btn-primary btn-sm"
                 disabled={status === "sending"}
+                className="btn btn-primary btn-sm"
+                style={{
+                  borderRadius: "3px",
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  fontSize: "0.8rem",
+                  padding: "9px 20px",
+                  opacity: status === "sending" ? 0.6 : 1,
+                }}
               >
-                {status === "sending" ? "Submitting…" : "Post comment"}
+                {status === "sending" ? "Posting…" : "Post Comment"}
               </button>
-              <p className="fs-7 opacity-50 mt-2 mb-0">Comments are moderated before appearing.</p>
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "0.72rem",
+                  color: "var(--color-muted)",
+                  margin: 0,
+                }}
+              >
+                Moderated before appearing
+              </p>
             </div>
           </form>
         )}

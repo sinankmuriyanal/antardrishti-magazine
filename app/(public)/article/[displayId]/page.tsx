@@ -42,124 +42,325 @@ export default async function ArticlePage({ params }: Props) {
         .toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : "";
 
+  const shareUrl = `/article/${article.displayId}`;
+
   return (
     <>
-      {/* Breadcrumbs */}
-      <div className="breadcrumbs panel z-1 py-2 bg-gray-800 text-white">
+      {/* ── Breadcrumb bar ── */}
+      <div className="breadcrumb-bar">
         <div className="container max-w-xl">
-          <ul className="breadcrumb nav-x justify-center gap-1 fs-7 sm:fs-6 m-0">
-            <li><a href="/" className="text-white opacity-60">Home</a></li>
-            <li><i className="unicon-chevron-right opacity-50"></i></li>
+          <ul className="breadcrumb nav-x gap-1 m-0">
+            <li>
+              <a href="/" style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none", fontFamily: "var(--font-body)" }}>
+                Home
+              </a>
+            </li>
+            <li><i className="unicon-chevron-right" style={{ opacity: 0.3, fontSize: "0.65rem" }}></i></li>
             {section && (
               <>
-                <li><a href={`/section/${section.slug}`} className="text-white opacity-60">{section.name}</a></li>
-                <li><i className="unicon-chevron-right opacity-50"></i></li>
+                <li>
+                  <a
+                    href={`/section/${section.slug}`}
+                    style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none", fontFamily: "var(--font-body)" }}
+                  >
+                    {section.name}
+                  </a>
+                </li>
+                <li><i className="unicon-chevron-right" style={{ opacity: 0.3, fontSize: "0.65rem" }}></i></li>
               </>
             )}
-            <li><span className="opacity-50 text-truncate">{article.title}</span></li>
+            <li>
+              <span
+                style={{ color: "rgba(255,255,255,0.65)", fontFamily: "var(--font-body)" }}
+                className="text-truncate"
+              >
+                {article.displayId}
+              </span>
+            </li>
           </ul>
         </div>
       </div>
 
-      <div className="position-absolute top-0 start-0 end-0 min-h-450px lg:min-h-600px bg-gray-900 z-0"></div>
+      {/* ── Dark header bg ── */}
+      <div
+        className="position-absolute top-0 start-0 end-0"
+        style={{ minHeight: "52px", background: "var(--color-ink)", zIndex: 0 }}
+      />
 
       <article className="post type-post single-post py-4 lg:py-6 xl:py-9">
-        <div className="container max-w-xl">
-          <div className="post-header uc-dark">
-            <div className="panel vstack gap-4 md:gap-6 xl:gap-9 text-center">
-              {section && (
-                <div className="panel">
-                  <a href={`/section/${section.slug}`} className="badge bg-primary text-white fw-semibold fs-7 px-2 py-1 rounded">
+
+        {/* ── Article header ── */}
+        <div className="container max-w-xl" style={{ position: "relative", zIndex: 1 }}>
+          <div
+            className="panel vstack gap-3 md:gap-4 text-center"
+            style={{ paddingTop: "2rem", paddingBottom: "1.5rem" }}
+          >
+            {/* Section badge */}
+            {section && (
+              <div>
+                <a
+                  href={`/section/${section.slug}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.62rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: "var(--color-primary)",
+                      border: "1px solid var(--color-primary)",
+                      padding: "3px 12px",
+                      borderRadius: "2px",
+                    }}
+                  >
                     {section.name}
-                  </a>
-                </div>
-              )}
-              <div className="panel vstack items-center max-w-400px sm:max-w-500px xl:max-w-md mx-auto gap-2 md:gap-3">
-                <h1 className="h4 sm:h3 xl:h1">{article.title}</h1>
-                {publishedDate && <p className="fs-6 opacity-60 m-0">{publishedDate}</p>}
+                  </span>
+                </a>
               </div>
-              {article.featuredImage && (
-                <figure className="featured-image m-0">
-                  <figure className="featured-image m-0 ratio ratio-2x1 rounded uc-transition-toggle overflow-hidden bg-gray-25 dark:bg-gray-800">
-                    <img
-                      className="media-cover image uc-transition-scale-up uc-transition-opaque"
-                      src={article.featuredImage}
-                      data-src={article.featuredImage}
-                      alt={article.title}
-                      data-uc-img="loading: lazy"
-                    />
-                  </figure>
-                </figure>
+            )}
+
+            {/* Title */}
+            <div style={{ maxWidth: 680, margin: "0 auto" }}>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(1.6rem, 4vw, 2.6rem)",
+                  fontWeight: 700,
+                  lineHeight: 1.18,
+                  letterSpacing: "-0.03em",
+                  color: "white",
+                  margin: 0,
+                }}
+              >
+                {article.title}
+              </h1>
+            </div>
+
+            {/* Excerpt */}
+            {article.excerpt && (
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "1.05rem",
+                  lineHeight: 1.65,
+                  color: "rgba(255,255,255,0.55)",
+                  maxWidth: 580,
+                  margin: "0 auto",
+                }}
+              >
+                {article.excerpt}
+              </p>
+            )}
+
+            {/* Meta row */}
+            <div className="hstack gap-3 justify-center items-center flex-wrap" style={{ marginTop: "0.5rem" }}>
+              {article.authorImage && (
+                <img
+                  src={article.authorImage}
+                  alt={article.authorName || ""}
+                  style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.2)" }}
+                />
+              )}
+              <div className="vstack gap-0" style={{ textAlign: "left" }}>
+                {article.authorName && (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 600,
+                      fontSize: "0.88rem",
+                      color: "rgba(255,255,255,0.8)",
+                    }}
+                  >
+                    {article.authorName}
+                  </span>
+                )}
+                {publishedDate && (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.75rem",
+                      color: "rgba(255,255,255,0.4)",
+                    }}
+                  >
+                    {publishedDate}
+                  </span>
+                )}
+              </div>
+              {article.displayId && (
+                <>
+                  <span style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.9rem" }}>&middot;</span>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.72rem",
+                      color: "rgba(255,255,255,0.35)",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Article {article.displayId}
+                  </span>
+                </>
               )}
             </div>
           </div>
         </div>
 
-        <div className="panel mt-4 lg:mt-6 xl:mt-9">
+        {/* ── Featured image ── */}
+        {article.featuredImage && (
+          <div className="container max-w-xl mt-2 mb-4 lg:mb-6" style={{ position: "relative", zIndex: 1 }}>
+            <figure
+              className="featured-image m-0 overflow-hidden"
+              style={{ borderRadius: "6px", aspectRatio: "16/9", maxHeight: 520 }}
+            >
+              <img
+                className="media-cover image uc-transition-toggle uc-transition-scale-up"
+                src={article.featuredImage}
+                alt={article.title}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                data-uc-img="loading: lazy"
+              />
+            </figure>
+          </div>
+        )}
+
+        {/* ── Article body ── */}
+        <div className="panel mt-2">
           <div className="container max-w-lg">
-            {/* Article body */}
+
+            {/* Content */}
             <div
-              className="post-content panel fs-6 md:fs-5"
+              className="post-content panel"
               data-uc-lightbox="animation: scale"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
 
             {/* Share bar */}
-            <div className="post-footer panel vstack sm:hstack gap-3 justify-between border-top py-4 mt-4 xl:py-9 xl:mt-9">
-              <ul className="post-share-icons nav-x gap-narrow">
-                <li className="me-1"><span className="text-black dark:text-white">Share:</span></li>
-                <li>
-                  <a className="btn btn-md btn-outline-gray-100 p-0 w-32px lg:w-40px h-32px lg:h-40px text-dark dark:text-white dark:border-gray-600 hover:bg-primary hover:border-primary hover:text-white rounded-circle"
-                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`/article/${article.displayId}`)}`}
-                    target="_blank" rel="noreferrer">
-                    <i className="unicon-logo-linkedin icon-1"></i>
+            <div
+              className="panel vstack sm:hstack gap-3 justify-between py-5 mt-5"
+              style={{ borderTop: "1px solid var(--color-border)" }}
+            >
+              <div className="hstack gap-2 items-center">
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "var(--color-muted)",
+                    marginRight: "4px",
+                  }}
+                >
+                  Share
+                </span>
+                <a
+                  className="share-btn"
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Share on LinkedIn"
+                >
+                  <i className="unicon-logo-linkedin icon-1"></i>
+                </a>
+                <a
+                  className="share-btn"
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Share on X"
+                >
+                  <i className="unicon-logo-x-filled icon-1"></i>
+                </a>
+                <a
+                  className="share-btn"
+                  href={`mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(shareUrl)}`}
+                  aria-label="Share by Email"
+                >
+                  <i className="unicon-email icon-1"></i>
+                </a>
+              </div>
+              <div className="hstack gap-2 items-center">
+                {section && (
+                  <a
+                    href={`/section/${section.slug}`}
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.68rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--color-primary)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    More in {section.name} &rarr;
                   </a>
-                </li>
-                <li>
-                  <a className="btn btn-md btn-outline-gray-100 p-0 w-32px lg:w-40px h-32px lg:h-40px text-dark dark:text-white dark:border-gray-600 hover:bg-primary hover:border-primary hover:text-white rounded-circle"
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}`}
-                    target="_blank" rel="noreferrer">
-                    <i className="unicon-logo-x-filled icon-1"></i>
-                  </a>
-                </li>
-                <li>
-                  <a className="btn btn-md btn-outline-gray-100 p-0 w-32px lg:w-40px h-32px lg:h-40px text-dark dark:text-white dark:border-gray-600 hover:bg-primary hover:border-primary hover:text-white rounded-circle"
-                    href={`mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(`/article/${article.displayId}`)}`}>
-                    <i className="unicon-email icon-1"></i>
-                  </a>
-                </li>
-              </ul>
+                )}
+              </div>
             </div>
 
-            {/* Author box */}
+            {/* Author bio */}
             {article.authorName && (
-              <div className="post-author panel py-4 px-3 sm:p-3 xl:p-4 bg-gray-25 dark:bg-opacity-10 rounded lg:rounded-2">
+              <div className="author-bio-card mt-2 mb-5">
                 <div className="row g-4 items-center">
                   {article.authorImage && (
-                    <div className="col-12 sm:col-5 xl:col-3">
-                      <figure className="featured-image m-0 ratio ratio-1x1 rounded uc-transition-toggle overflow-hidden bg-gray-25 dark:bg-gray-800">
+                    <div className="col-12 sm:col-auto">
+                      <figure
+                        className="m-0 overflow-hidden"
+                        style={{ width: 90, height: 90, borderRadius: "50%", flexShrink: 0 }}
+                      >
                         <img
-                          className="media-cover image uc-transition-scale-up uc-transition-opaque"
                           src={article.authorImage}
-                          data-src={article.authorImage}
                           alt={article.authorName}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                           data-uc-img="loading: lazy"
                         />
                       </figure>
                     </div>
                   )}
                   <div className="col">
-                    <div className="panel vstack items-start gap-2 md:gap-3">
-                      <h4 className="h5 lg:h4 m-0">{article.authorName}</h4>
-                      {article.authorBio && <p className="fs-6 lg:fs-5">{article.authorBio}</p>}
+                    <div className="vstack gap-2">
+                      <div>
+                        <div
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontSize: "0.6rem",
+                            fontWeight: 700,
+                            letterSpacing: "0.12em",
+                            textTransform: "uppercase",
+                            color: "var(--color-muted)",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          Written by
+                        </div>
+                        <h4 className="author-name">{article.authorName}</h4>
+                      </div>
+                      {article.authorBio && (
+                        <p className="author-bio-text">{article.authorBio}</p>
+                      )}
                       {article.authorLinkedIn && (
-                        <ul className="nav-x gap-1 text-gray-400 dark:text-white">
-                          <li>
-                            <a href={article.authorLinkedIn} target="_blank" rel="noreferrer">
-                              <i className="icon-2 unicon-logo-linkedin"></i>
-                            </a>
-                          </li>
-                        </ul>
+                        <a
+                          href={article.authorLinkedIn}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontFamily: "var(--font-body)",
+                            fontSize: "0.78rem",
+                            fontWeight: 600,
+                            color: "var(--color-primary)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <i className="icon-2 unicon-logo-linkedin"></i>
+                          LinkedIn Profile
+                        </a>
                       )}
                     </div>
                   </div>
@@ -167,8 +368,9 @@ export default async function ArticlePage({ params }: Props) {
               </div>
             )}
 
-            {/* Comments section */}
+            {/* Comments */}
             <CommentSection articleId={article.id} />
+
           </div>
         </div>
       </article>

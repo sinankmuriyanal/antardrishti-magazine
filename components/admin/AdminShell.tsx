@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, type User } from "firebase/auth";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/admin", label: "Dashboard",  icon: "⊞" },
-  { href: "/admin/articles", label: "Articles", icon: "📄" },
-  { href: "/admin/sections", label: "Sections", icon: "📁" },
-  { href: "/admin/comments", label: "Comments", icon: "💬" },
-  { href: "/admin/import",   label: "Import",   icon: "⬆" },
+  { href: "/admin",          label: "Dashboard", icon: "⊞" },
+  { href: "/admin/articles", label: "Articles",  icon: "◻" },
+  { href: "/admin/sections", label: "Sections",  icon: "≡" },
+  { href: "/admin/comments", label: "Comments",  icon: "◇" },
+  { href: "/admin/import",   label: "Import",    icon: "↑" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -44,45 +44,79 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500">Loading…</div>
+        <div className="flex items-center gap-3 text-gray-400">
+          <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
+          <span className="text-sm">Loading…</span>
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 w-full max-w-sm">
-          <div className="text-center mb-6">
-            <h1 className="text-xl font-bold text-gray-900">Antardrishti Admin</h1>
-            <p className="text-sm text-gray-500 mt-1">Sign in to manage content</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            {loginError && <p className="text-red-500 text-xs">{loginError}</p>}
-            <button
-              type="submit"
-              disabled={loginLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50"
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "linear-gradient(160deg, #0F1923 0%, #1C2940 100%)" }}
+      >
+        <div className="w-full max-w-sm mx-4">
+          {/* Logo / brand */}
+          <div className="text-center mb-8">
+            <div
+              className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4"
+              style={{ background: "#e8521d" }}
             >
-              {loginLoading ? "Signing in…" : "Sign in"}
-            </button>
-          </form>
+              <span style={{ color: "white", fontSize: "1.1rem", fontWeight: 800, letterSpacing: "-0.02em" }}>A</span>
+            </div>
+            <h1 className="text-xl font-bold text-white mb-1">Antardrishti Admin</h1>
+            <p className="text-sm text-gray-400">Sign in to manage your magazine</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-2xl p-8">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+
+              {loginError && (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                  <span className="text-xs">⚠</span>
+                  <p className="text-xs">{loginError}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="w-full text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: loginLoading ? "#ccc" : "#e8521d" }}
+              >
+                {loginLoading ? "Signing in…" : "Sign in"}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     );
@@ -90,62 +124,114 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-60 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:flex`}>
-        <div className="h-14 flex items-center px-4 border-b border-gray-200">
-          <span className="font-bold text-gray-900 text-sm">Antardrishti Admin</span>
-        </div>
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                pathname === item.href
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              }`}
-            >
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-gray-200">
-          <div className="text-xs text-gray-500 truncate mb-2">{user.email}</div>
-          <button
-            onClick={() => signOut(auth)}
-            className="w-full text-left text-xs text-red-500 hover:text-red-700 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-56 flex flex-col transform transition-transform duration-200 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 lg:static lg:flex`}
+        style={{ background: "#0F1923", borderRight: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        {/* Sidebar header */}
+        <div
+          className="h-14 flex items-center px-4 gap-3"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+            style={{ background: "#e8521d" }}
           >
-            Sign out
-          </button>
+            <span style={{ color: "white", fontSize: "0.75rem", fontWeight: 800 }}>A</span>
+          </div>
+          <span className="text-white text-sm font-semibold truncate">Antardrishti</span>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          {NAV.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  color: isActive ? "white" : "rgba(255,255,255,0.5)",
+                  background: isActive ? "rgba(232,82,29,0.15)" : "transparent",
+                  borderLeft: isActive ? "2px solid #e8521d" : "2px solid transparent",
+                }}
+              >
+                <span style={{ fontSize: "0.9rem", opacity: isActive ? 1 : 0.6 }}>{item.icon}</span>
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
+
+        {/* User + sign out */}
+        <div
+          className="p-3"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <div className="px-3 py-2">
+            <div className="text-xs text-gray-500 truncate mb-2">{user.email}</div>
+            <button
+              onClick={() => signOut(auth)}
+              className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors w-full text-left"
+              style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)" }}
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/20 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
-      {/* Main */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 gap-3 lg:px-6">
+
+        {/* Top bar */}
+        <header
+          className="h-14 flex items-center px-4 gap-3 lg:px-6"
+          style={{ background: "white", borderBottom: "1px solid #f0ece8" }}
+        >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"
+            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+            aria-label="Toggle menu"
           >
             ☰
           </button>
+          <div
+            className="h-5 w-px mx-1 lg:hidden"
+            style={{ background: "#e5e5e5" }}
+          />
           <span className="text-sm font-medium text-gray-500">
             {NAV.find((n) => n.href === pathname)?.label ?? "Admin"}
           </span>
-          <div className="ml-auto">
-            <a href="/" target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">
-              View site ↗
+          <div className="ml-auto flex items-center gap-3">
+            <a
+              href="/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors flex items-center gap-1"
+            >
+              View site
+              <span style={{ fontSize: "0.7rem" }}>↗</span>
             </a>
           </div>
         </header>
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
+
+        {/* Page content */}
+        <main className="flex-1 p-4 lg:p-6 xl:p-8 overflow-auto">
           {children}
         </main>
       </div>

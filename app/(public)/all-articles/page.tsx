@@ -1,14 +1,17 @@
 import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { getSectionByNumber, SECTIONS_DATA } from "@/lib/sections";
-import { ListArticleCard } from "@/components/public/ArticleCard";
+import { OverlayCard } from "@/components/public/ArticleCard";
 import type { Metadata } from "next";
 import type { Article } from "@/types";
 
-export const metadata: Metadata = { title: "All Articles" };
+export const metadata: Metadata = {
+  title: "All Articles",
+  description: "Browse every article from Antardrishti across all sections.",
+};
 export const revalidate = 3600;
 
-export default async function AllArticlesPage({ searchParams }: { searchParams: Promise<{ section?: string }> }) {
-  const { section: sectionFilter } = await searchParams;
+export default async function AllArticlesPage({ searchParams }: { searchParams: Promise<{ section?: string; q?: string }> }) {
+  const { section: sectionFilter, q: query } = await searchParams;
 
   let articles: Article[] = [];
   try {
@@ -16,60 +19,146 @@ export default async function AllArticlesPage({ searchParams }: { searchParams: 
     articles = await fetchArticles(opts);
   } catch { /* DB not configured */ }
 
+  // Client-side search filter (basic title/excerpt match)
+  const filtered = query
+    ? articles.filter((a) =>
+        a.title.toLowerCase().includes(query.toLowerCase()) ||
+        (a.excerpt ?? "").toLowerCase().includes(query.toLowerCase())
+      )
+    : articles;
+
+  const activeSection = sectionFilter
+    ? SECTIONS_DATA.find((s) => String(s.number) === sectionFilter)
+    : null;
+
   return (
     <>
-      <div className="breadcrumbs panel py-2 bg-gray-800 text-white">
+      {/* ── Header ── */}
+      <div className="section-page-hero panel py-6 lg:py-9">
         <div className="container max-w-xl">
-          <ul className="breadcrumb nav-x gap-1 fs-7 m-0">
-            <li><a href="/" className="text-white opacity-60">Home</a></li>
-            <li><i className="unicon-chevron-right opacity-50"></i></li>
-            <li>All Articles</li>
+
+          {/* Breadcrumb */}
+          <ul
+            className="breadcrumb nav-x gap-1 m-0 mb-5"
+            style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem" }}
+          >
+            <li>
+              <a href="/" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Home</a>
+            </li>
+            <li><i className="unicon-chevron-right" style={{ opacity: 0.25, fontSize: "0.65rem" }}></i></li>
+            <li>
+              <span style={{ color: "rgba(255,255,255,0.65)", fontFamily: "var(--font-body)" }}>
+                All Articles
+              </span>
+            </li>
           </ul>
+
+          <div className="hstack gap-4 items-center mb-3">
+            <span
+              style={{
+                display: "block",
+                width: "5px",
+                height: "36px",
+                background: "var(--color-primary)",
+                borderRadius: "3px",
+                flexShrink: 0,
+              }}
+            />
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(1.6rem, 4vw, 2.8rem)",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.15,
+                color: "white",
+                margin: 0,
+              }}
+            >
+              {activeSection ? activeSection.name : "All Articles"}
+            </h1>
+          </div>
+
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "0.88rem",
+              color: "rgba(255,255,255,0.4)",
+              margin: "0 0 0 calc(5px + 1rem)",
+            }}
+          >
+            {filtered.length} {filtered.length === 1 ? "article" : "articles"}
+            {activeSection ? ` in ${activeSection.name}` : " across all sections"}
+            {query ? ` matching "${query}"` : ""}
+          </p>
         </div>
       </div>
 
-      <div className="section panel py-4 lg:py-6">
+      {/* ── Content ── */}
+      <div className="section panel py-5 lg:py-7" style={{ background: "var(--color-warm-bg)" }}>
         <div className="container max-w-xl">
-          <div className="panel hstack justify-between items-center mb-4">
-            <h1 className="h3 m-0">All Articles</h1>
-            <span className="fs-6 opacity-60">{articles.length} articles</span>
-          </div>
 
-          {/* Section filter tabs */}
-          <div className="panel mb-4 overflow-x-auto">
-            <ul className="nav-x gap-2 fs-6 fw-medium flex-nowrap">
-              <li>
-                <a href="/all-articles" className={`btn btn-sm ${!sectionFilter ? "btn-primary" : "btn-outline-gray-300 dark:btn-outline-gray-700"}`}>
-                  All
-                </a>
-              </li>
-              {SECTIONS_DATA.map((s) => (
-                <li key={s.id}>
-                  <a href={`/all-articles?section=${s.number}`}
-                    className={`btn btn-sm ${sectionFilter === String(s.number) ? "btn-primary" : "btn-outline-gray-300 dark:btn-outline-gray-700"}`}>
+          {/* Section filter pills */}
+          <div className="panel mb-5" style={{ overflowX: "auto", paddingBottom: "4px" }}>
+            <div className="hstack gap-2 flex-nowrap">
+              <a
+                href="/all-articles"
+                className={`filter-pill${!sectionFilter ? " active" : ""}`}
+              >
+                All
+              </a>
+              {SECTIONS_DATA.map((s) => {
+                const isActive = sectionFilter === String(s.number);
+                return (
+                  <a
+                    key={s.id}
+                    href={`/all-articles?section=${s.number}`}
+                    className={`filter-pill${isActive ? " active" : ""}`}
+                  >
                     {s.name}
                   </a>
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+            </div>
           </div>
 
-          {articles.length === 0 ? (
-            <div className="panel py-9 text-center">
-              <p className="fs-5 opacity-50">No articles found.</p>
+          {/* Articles grid */}
+          {filtered.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state__icon"><i className="unicon-file-text"></i></div>
+              <p className="empty-state__text">
+                {query ? `No articles found for "${query}"` : "No articles found."}
+              </p>
+              {(sectionFilter || query) && (
+                <a
+                  href="/all-articles"
+                  style={{
+                    display: "inline-block",
+                    marginTop: "1rem",
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "var(--color-primary)",
+                    textDecoration: "none",
+                  }}
+                >
+                  Clear filters
+                </a>
+              )}
             </div>
           ) : (
             <div className="row child-cols-12 md:child-cols-6 lg:child-cols-4 g-4">
-              {articles.map((a) => {
+              {filtered.map((a) => {
                 const sec = getSectionByNumber(a.sectionNumber);
                 return sec ? (
                   <div key={a.id}>
-                    <ListArticleCard article={a} section={sec} />
+                    <OverlayCard article={a} section={sec} ratio="ratio-4x3" />
                   </div>
                 ) : null;
               })}
             </div>
           )}
+
         </div>
       </div>
     </>
