@@ -2,22 +2,43 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
+import { SECTIONS_DATA } from "@/lib/sections";
 import type { Article } from "@/types";
 
-interface Stats {
-  articles: number;
+interface DashStats {
+  total: number;
   published: number;
-  comments: number;
-  pending: number;
+  drafts: number;
+  editorsPicks: number;
+  pendingComments: number;
   missingCover: number;
   missingAuthorPhoto: number;
-  missingArticles: { id: string; title: string; displayId: string; missingCover: boolean; missingPhoto: boolean }[];
+  sectionCoverage: { name: string; count: number; slug: string }[];
+  recentArticles: { id: string; title: string; displayId: string; slug?: string; sectionName: string; isPublished: boolean; authorName?: string }[];
+  missingArticles: { id: string; title: string; displayId: string; slug?: string; missingCover: boolean; missingPhoto: boolean }[];
 }
 
-const EMPTY: Stats = { articles: 0, published: 0, comments: 0, pending: 0, missingCover: 0, missingAuthorPhoto: 0, missingArticles: [] };
+const EMPTY: DashStats = {
+  total: 0, published: 0, drafts: 0, editorsPicks: 0, pendingComments: 0,
+  missingCover: 0, missingAuthorPhoto: 0, sectionCoverage: [], recentArticles: [], missingArticles: [],
+};
+
+function KPICard({ label, value, sub, href, accent = "#e8521d", loading }: {
+  label: string; value: number | string; sub?: string; href: string; accent?: string; loading: boolean;
+}) {
+  return (
+    <a href={href} className="block bg-white rounded-xl border p-5 hover:shadow-md transition-shadow group" style={{ borderColor: "#f0ece8" }}>
+      <div className="text-3xl font-bold mb-1 transition-colors group-hover:text-orange-600" style={{ color: loading ? "#e5e7eb" : accent, fontVariantNumeric: "tabular-nums" }}>
+        {loading ? "—" : value}
+      </div>
+      <div className="text-sm font-semibold text-gray-700">{label}</div>
+      {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
+    </a>
+  );
+}
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>(EMPTY);
+  const [stats, setStats] = useState<DashStats>(EMPTY);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,27 +49,49 @@ export default function AdminDashboard() {
           fetch("/api/comments").then((r) => r.json() as Promise<{ isApproved: boolean }[]>),
         ]);
 
-        const pending = allComments.filter((c) => !c.isApproved).length;
-        const missingCoverList = articles.filter((a) => !a.featuredImage);
-        const missingPhotoList = articles.filter((a) => !a.authorImage);
-        const allMissing = articles
-          .filter((a) => !a.featuredImage || !a.authorImage)
+        const sectionMap: Record<number, string> = {};
+        SECTIONS_DATA.forEach((s) => { sectionMap[s.number] = s.name; });
+
+        const sectionCount: Record<number, number> = {};
+        articles.forEach((a) => { sectionCount[a.sectionNumber] = (sectionCount[a.sectionNumber] ?? 0) + 1; });
+
+        const recent = [...articles]
+          .sort((a, b) => {
+            const ta = (a.updatedAt as { _seconds?: number; seconds?: number })?._seconds
+              ?? (a.updatedAt as { _seconds?: number; seconds?: number })?.seconds ?? 0;
+            const tb = (b.updatedAt as { _seconds?: number; seconds?: number })?._seconds
+              ?? (b.updatedAt as { _seconds?: number; seconds?: number })?.seconds ?? 0;
+            return tb - ta;
+          })
+          .slice(0, 8)
           .map((a) => ({
             id: a.id,
             title: a.title,
             displayId: a.displayId,
-            missingCover: !a.featuredImage,
-            missingPhoto: !a.authorImage,
+            slug: a.slug,
+            sectionName: sectionMap[a.sectionNumber] ?? "—",
+            isPublished: a.isPublished,
+            authorName: a.authorName,
           }));
 
         setStats({
-          articles: articles.length,
+          total: articles.length,
           published: articles.filter((a) => a.isPublished).length,
-          comments: allComments.length,
-          pending,
-          missingCover: missingCoverList.length,
-          missingAuthorPhoto: missingPhotoList.length,
-          missingArticles: allMissing,
+          drafts: articles.filter((a) => !a.isPublished).length,
+          editorsPicks: articles.filter((a) => a.isEditorsPick).length,
+          pendingComments: allComments.filter((c) => !c.isApproved).length,
+          missingCover: articles.filter((a) => !a.featuredImage).length,
+          missingAuthorPhoto: articles.filter((a) => !a.authorImage).length,
+          sectionCoverage: SECTIONS_DATA.map((s) => ({
+            name: s.name, count: sectionCount[s.number] ?? 0, slug: s.slug,
+          })),
+          recentArticles: recent,
+          missingArticles: articles
+            .filter((a) => !a.featuredImage || !a.authorImage)
+            .map((a) => ({
+              id: a.id, title: a.title, displayId: a.displayId, slug: a.slug,
+              missingCover: !a.featuredImage, missingPhoto: !a.authorImage,
+            })),
         });
       } catch { /* DB not configured */ }
       setLoading(false);
@@ -56,205 +99,195 @@ export default function AdminDashboard() {
     load();
   }, []);
 
-  const statCards = [
-    {
-      label: "Total Articles",
-      value: stats.articles,
-      sub: `${stats.published} published`,
-      href: "/admin/articles",
-      color: "#e8521d",
-      bg: "#fef3f0",
-    },
-    {
-      label: "Comments",
-      value: stats.comments,
-      sub: stats.pending > 0 ? `${stats.pending} need review` : "All reviewed",
-      href: "/admin/comments",
-      color: "#2563eb",
-      bg: "#eff6ff",
-    },
-    {
-      label: "Missing Cover",
-      value: stats.missingCover,
-      sub: "articles need images",
-      href: "/admin/articles",
-      color: stats.missingCover > 0 ? "#dc2626" : "#16a34a",
-      bg: stats.missingCover > 0 ? "#fef2f2" : "#f0fdf4",
-    },
-    {
-      label: "Missing Author Photo",
-      value: stats.missingAuthorPhoto,
-      sub: "authors need photos",
-      href: "/admin/articles",
-      color: stats.missingAuthorPhoto > 0 ? "#d97706" : "#16a34a",
-      bg: stats.missingAuthorPhoto > 0 ? "#fffbeb" : "#f0fdf4",
-    },
-  ];
+  const maxSectionCount = Math.max(...stats.sectionCoverage.map((s) => s.count), 1);
 
   return (
     <AdminShell>
-      <div className="max-w-5xl">
+      <div className="max-w-5xl space-y-6">
 
         {/* Page header */}
-        <div className="mb-8">
-          <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Antardrishti Magazine — Content overview</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-sm text-gray-400 mt-0.5">Antardrishti — Content overview</p>
+          </div>
+          <a
+            href="/admin/articles/new"
+            className="flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
+            style={{ background: "#e8521d" }}
+          >
+            <span className="text-base leading-none">+</span> Write article
+          </a>
         </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {statCards.map((c) => (
-            <a
-              key={c.label}
-              href={c.href}
-              className="block rounded-xl border p-5 transition-shadow hover:shadow-md"
-              style={{ borderColor: "#f0ece8", background: "white" }}
-            >
-              <div
-                className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold mb-3"
-                style={{ background: c.bg, color: c.color }}
-              >
-                {loading ? "…" : c.value}
-              </div>
-              <div className="text-2xl font-bold text-gray-900 mb-0.5">
-                {loading ? <span className="text-gray-200">—</span> : c.value}
-              </div>
-              <div className="text-sm font-medium text-gray-700">{c.label}</div>
-              <div className="text-xs text-gray-400 mt-0.5">{c.sub}</div>
-            </a>
-          ))}
+        {/* KPI row 1 — content volume */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Content</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KPICard label="Total articles" value={stats.total} sub={`${stats.published} live · ${stats.drafts} draft`} href="/admin/articles" loading={loading} />
+            <KPICard label="Published" value={stats.published} sub="visible to readers" href="/admin/articles" accent="#16a34a" loading={loading} />
+            <KPICard label="Editor's picks" value={stats.editorsPicks} sub="featured articles" href="/admin/articles" accent="#f59e0b" loading={loading} />
+            <KPICard label="Drafts" value={stats.drafts} sub="not yet published" href="/admin/articles" accent="#6b7280" loading={loading} />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+        {/* KPI row 2 — health */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Content health</p>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <KPICard
+              label="Pending comments"
+              value={stats.pendingComments}
+              sub={stats.pendingComments > 0 ? "need your review" : "inbox clear"}
+              href="/admin/comments"
+              accent={stats.pendingComments > 0 ? "#2563eb" : "#16a34a"}
+              loading={loading}
+            />
+            <KPICard
+              label="Missing cover"
+              value={stats.missingCover}
+              sub="articles need images"
+              href="/admin/articles"
+              accent={stats.missingCover > 0 ? "#dc2626" : "#16a34a"}
+              loading={loading}
+            />
+            <KPICard
+              label="Missing author photo"
+              value={stats.missingAuthorPhoto}
+              sub="authors need photos"
+              href="/admin/articles"
+              accent={stats.missingAuthorPhoto > 0 ? "#d97706" : "#16a34a"}
+              loading={loading}
+            />
+          </div>
+        </div>
 
-          {/* Quick actions */}
-          <div className="bg-white rounded-xl border p-5" style={{ borderColor: "#f0ece8" }}>
-            <h2 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider text-xs text-gray-400">
-              Quick Actions
-            </h2>
-            <div className="space-y-2">
-              {[
-                { href: "/admin/articles/new", label: "Write a new article", icon: "+" },
-                { href: "/admin/import", label: "Import from .docx file", icon: "↑" },
-                { href: "/admin/comments", label: `Moderate comments${stats.pending > 0 ? ` (${stats.pending} pending)` : ""}`, icon: "◇" },
-                { href: "/admin/articles", label: "Manage all articles", icon: "◻" },
-              ].map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <span
-                    className="w-7 h-7 rounded-md flex items-center justify-center text-sm flex-shrink-0"
-                    style={{ background: "#fef3f0", color: "#e8521d" }}
-                  >
-                    {item.icon}
-                  </span>
-                  {item.label}
-                  {item.href === "/admin/comments" && stats.pending > 0 && (
-                    <span className="ml-auto text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-semibold">
-                      {stats.pending}
-                    </span>
-                  )}
-                </a>
-              ))}
+        {/* Main content grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+          {/* Recent articles — wider */}
+          <div className="lg:col-span-3 bg-white rounded-xl border overflow-hidden" style={{ borderColor: "#f0ece8" }}>
+            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "#f5f3f0" }}>
+              <h2 className="text-sm font-semibold text-gray-900">Recently updated</h2>
+              <a href="/admin/articles" className="text-xs font-semibold hover:opacity-80" style={{ color: "#e8521d" }}>
+                View all →
+              </a>
             </div>
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="inline-block w-5 h-5 border-2 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
+              </div>
+            ) : stats.recentArticles.length === 0 ? (
+              <div className="p-8 text-center text-sm text-gray-400">No articles yet</div>
+            ) : (
+              <div className="divide-y" style={{ borderColor: "#f5f3f0" }}>
+                {stats.recentArticles.map((a) => (
+                  <div key={a.id} className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                    <span
+                      className="flex-shrink-0 w-1.5 h-1.5 rounded-full"
+                      style={{ background: a.isPublished ? "#22c55e" : "#d1d5db" }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-sm text-gray-900 truncate">{a.title}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {a.sectionName}
+                        {a.authorName && <> · {a.authorName}</>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <a
+                        href={`/article/${a.slug || a.displayId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-gray-300 hover:text-gray-500"
+                      >
+                        ↗
+                      </a>
+                      <a
+                        href={`/admin/articles/${a.id}/edit`}
+                        className="text-xs font-semibold hover:opacity-70"
+                        style={{ color: "#e8521d" }}
+                      >
+                        Edit
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Setup checklist */}
-          <div className="bg-white rounded-xl border p-5" style={{ borderColor: "#f0ece8" }}>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-              Setup Checklist
-            </h2>
-            <div className="space-y-2.5 text-sm">
-              {[
-                { text: "Create Firebase project & add keys to .env.local", code: null },
-                { text: "Run extraction script", code: "python scripts/migrate_html.py" },
-                { text: "Run docx extractor", code: "python scripts/extract_docx.py" },
-                { text: "Seed Firestore", code: "node scripts/import_to_firestore.js" },
-                { text: "Enable Firebase Auth (email/password)", code: null },
-                { text: "Create admin user in Firebase Auth console", code: null },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-gray-600">
-                  <span className="text-gray-300 mt-0.5 flex-shrink-0">□</span>
-                  <span>
-                    {item.text}
-                    {item.code && (
-                      <>
-                        {" "}
-                        <code className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-mono">
-                          {item.code}
-                        </code>
-                      </>
-                    )}
-                  </span>
-                </div>
-              ))}
+          {/* Section coverage — narrower */}
+          <div className="lg:col-span-2 bg-white rounded-xl border overflow-hidden" style={{ borderColor: "#f0ece8" }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: "#f5f3f0" }}>
+              <h2 className="text-sm font-semibold text-gray-900">Sections</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Articles per section</p>
             </div>
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="inline-block w-5 h-5 border-2 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className="p-5 space-y-3">
+                {stats.sectionCoverage.map((s) => (
+                  <a key={s.slug} href={`/section/${s.slug}`} target="_blank" rel="noreferrer" className="block group">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium text-gray-700 group-hover:text-orange-600 transition-colors">{s.name}</span>
+                      <span className="text-xs font-bold text-gray-500">{s.count}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#f5f3f0" }}>
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${Math.round((s.count / maxSectionCount) * 100)}%`,
+                          background: s.count > 0 ? "#e8521d" : "#e5e7eb",
+                          minWidth: s.count > 0 ? "8px" : 0,
+                        }}
+                      />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
-
         </div>
 
-        {/* Missing images table */}
+        {/* Content health — missing images */}
         {!loading && stats.missingArticles.length > 0 && (
           <div className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: "#f0ece8" }}>
             <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "#f5f3f0" }}>
               <div>
                 <h2 className="text-sm font-semibold text-gray-900">Articles missing images</h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {stats.missingArticles.length} article{stats.missingArticles.length !== 1 ? "s" : ""} need attention — assign someone to add them via Edit
+                  {stats.missingArticles.length} article{stats.missingArticles.length !== 1 ? "s" : ""} need attention
                 </p>
               </div>
-              <a
-                href="/admin/articles"
-                className="text-xs font-semibold hover:opacity-80"
-                style={{ color: "#e8521d" }}
-              >
+              <a href="/admin/articles" className="text-xs font-semibold hover:opacity-80" style={{ color: "#e8521d" }}>
                 View all →
               </a>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[520px]">
+              <table className="w-full text-sm min-w-[480px]">
                 <thead>
-                  <tr style={{ background: "#faf9f6" }}>
+                  <tr style={{ background: "#faf9f6", borderBottom: "1px solid #f5f3f0" }}>
                     <th className="text-left px-5 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Article</th>
-                    <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">ID</th>
                     <th className="text-center px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cover</th>
-                    <th className="text-center px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Author Photo</th>
+                    <th className="text-center px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Author</th>
                     <th className="text-right px-5 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.missingArticles.map((a, i) => (
-                    <tr
-                      key={a.id}
-                      style={{ borderTop: "1px solid #f5f3f0" }}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-5 py-3 font-medium text-gray-800 truncate" style={{ maxWidth: 260 }}>
-                        {a.title}
-                      </td>
-                      <td className="px-3 py-3 font-mono text-xs text-gray-400">{a.displayId}</td>
+                    <tr key={a.id} style={{ borderTop: i > 0 ? "1px solid #f5f3f0" : "none" }} className="hover:bg-gray-50">
+                      <td className="px-5 py-3 font-medium text-gray-800 truncate" style={{ maxWidth: 260 }}>{a.title}</td>
                       <td className="px-3 py-3 text-center">
-                        {a.missingCover ? (
-                          <span className="inline-block w-2 h-2 rounded-full bg-red-400" title="Missing" />
-                        ) : (
-                          <span className="inline-block w-2 h-2 rounded-full bg-green-400" title="Present" />
-                        )}
+                        <span className="inline-block w-2 h-2 rounded-full" style={{ background: a.missingCover ? "#ef4444" : "#22c55e" }} />
                       </td>
                       <td className="px-3 py-3 text-center">
-                        {a.missingPhoto ? (
-                          <span className="inline-block w-2 h-2 rounded-full bg-amber-400" title="Missing" />
-                        ) : (
-                          <span className="inline-block w-2 h-2 rounded-full bg-green-400" title="Present" />
-                        )}
+                        <span className="inline-block w-2 h-2 rounded-full" style={{ background: a.missingPhoto ? "#f59e0b" : "#22c55e" }} />
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <a
-                          href={`/admin/articles/${a.id}/edit`}
-                          className="text-xs font-semibold hover:opacity-70 transition-opacity"
-                          style={{ color: "#e8521d" }}
-                        >
+                        <a href={`/admin/articles/${a.id}/edit`} className="text-xs font-semibold hover:opacity-70" style={{ color: "#e8521d" }}>
                           Edit →
                         </a>
                       </td>
@@ -266,11 +299,8 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {!loading && stats.missingArticles.length === 0 && stats.articles > 0 && (
-          <div
-            className="rounded-xl border px-5 py-4 flex items-center gap-3"
-            style={{ borderColor: "#d1fae5", background: "#f0fdf4" }}
-          >
+        {!loading && stats.missingArticles.length === 0 && stats.total > 0 && (
+          <div className="rounded-xl border px-5 py-4 flex items-center gap-3" style={{ borderColor: "#d1fae5", background: "#f0fdf4" }}>
             <span className="text-green-500 text-lg">✓</span>
             <div>
               <p className="text-sm font-semibold text-green-800">All images present</p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageExtension from "@tiptap/extension-image";
@@ -94,7 +94,9 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
   const [isEditorsPick, setIsEditorsPick] = useState(initial?.isEditorsPick ?? false);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
   const [uploadingAuthor, setUploadingAuthor] = useState(false);
+  const [uploadingInline, setUploadingInline] = useState(false);
   const [error, setError] = useState("");
+  const inlineImageRef = useRef<HTMLInputElement>(null);
 
   // Auto-generate slug from title unless user has manually edited it
   useEffect(() => {
@@ -128,6 +130,18 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     } catch { setError("Failed to upload featured image."); }
     setUploadingFeatured(false);
   }
+
+  const handleInlineImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+    setUploadingInline(true);
+    try {
+      const url = await uploadImage(file, `articles/uploads/inline-${Date.now()}-${file.name}`);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch { setError("Failed to upload image."); }
+    setUploadingInline(false);
+    if (inlineImageRef.current) inlineImageRef.current.value = "";
+  }, [editor]);
 
   async function handleAuthorUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -187,6 +201,11 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     { label: "1. List", title: "Ordered list", cmd: () => editor?.chain().focus().toggleOrderedList().run(), active: () => editor?.isActive("orderedList") },
     { label: "——", title: "Horizontal rule", cmd: () => editor?.chain().focus().setHorizontalRule().run(), active: () => false },
   ];
+
+  function insertImageByUrl() {
+    const url = prompt("Image URL:");
+    if (url?.trim()) editor?.chain().focus().setImage({ src: url.trim() }).run();
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 max-w-4xl">
@@ -357,6 +376,36 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
                 {btn.label}
               </button>
             ))}
+            {/* Divider */}
+            <div className="w-px mx-1 self-stretch" style={{ background: "#e5e7eb" }} />
+            {/* Upload inline image */}
+            <button
+              type="button"
+              onClick={() => inlineImageRef.current?.click()}
+              disabled={uploadingInline}
+              title="Insert image from file"
+              className="px-2.5 py-1 text-xs rounded font-medium transition-colors disabled:opacity-40"
+              style={{ border: "1px solid #e5e7eb", color: "#4b5563", background: "white" }}
+            >
+              {uploadingInline ? "Uploading…" : "↑ Image"}
+            </button>
+            {/* Insert image by URL */}
+            <button
+              type="button"
+              onClick={insertImageByUrl}
+              title="Insert image from URL"
+              className="px-2.5 py-1 text-xs rounded font-medium transition-colors"
+              style={{ border: "1px solid #e5e7eb", color: "#4b5563", background: "white" }}
+            >
+              URL Image
+            </button>
+            <input
+              ref={inlineImageRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleInlineImageUpload}
+            />
           </div>
           <EditorContent
             editor={editor}

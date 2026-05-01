@@ -25,6 +25,11 @@ const SOCIAL_LINKS = [
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      {/* UIKit CSS — public pages only, intentionally NOT in root layout so admin is unaffected */}
+      <link rel="stylesheet" href="/assets/css/unicons.min.css" />
+      <link rel="stylesheet" href="/assets/css/swiper-bundle.min.css" />
+      <link rel="stylesheet" href="/assets/js/uni-core/css/uni-core.min.css" />
+      <link rel="stylesheet" href="/assets/css/theme/demo-three.min.css" />
       <Script src="/assets/js/app-head-bs.js" strategy="beforeInteractive" />
       <Script src="/assets/js/uni-core/js/uni-core-bundle.min.js" strategy="beforeInteractive" />
 

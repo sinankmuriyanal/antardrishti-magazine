@@ -2,7 +2,6 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState, useRef } from "react";
-import { getAuthors, createAuthor, updateAuthor, deleteAuthor } from "@/lib/authors";
 import { slugify } from "@/lib/utils";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
@@ -27,10 +26,13 @@ export default function AuthorsAdmin() {
 
   async function load() {
     setLoading(true);
+    setError("");
     try {
-      const all = await getAuthors();
-      all.sort((a, b) => a.name.localeCompare(b.name));
-      setAuthors(all);
+      const res = await fetch("/api/authors");
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json() as Author[];
+      data.sort((a, b) => a.name.localeCompare(b.name));
+      setAuthors(data);
     } catch (e) { setError(String(e)); }
     setLoading(false);
   }
@@ -79,12 +81,21 @@ export default function AuthorsAdmin() {
     setError("");
     try {
       if (editing) {
-        await updateAuthor(editing.id, form);
+        const res = await fetch(`/api/authors/${editing.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: form.name, bio: form.bio, photo: form.photo, linkedin: form.linkedin }),
+        });
+        if (!res.ok) throw new Error(await res.text());
         setAuthors((prev) => prev.map((a) => a.id === editing.id ? { ...a, ...form } : a));
       } else {
-        const id = await createAuthor(form);
+        const res = await fetch("/api/authors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) throw new Error(await res.text());
         await load();
-        void id;
       }
       setEditing(null);
       setForm(EMPTY);
@@ -95,11 +106,14 @@ export default function AuthorsAdmin() {
 
   async function handleDelete(a: Author) {
     if (!confirm(`Delete author "${a.name}"? Articles linked to this author will still show their name.`)) return;
-    await deleteAuthor(a.id);
-    setAuthors((prev) => prev.filter((x) => x.id !== a.id));
+    try {
+      const res = await fetch(`/api/authors/${a.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      setAuthors((prev) => prev.filter((x) => x.id !== a.id));
+    } catch (e) { setError(String(e)); }
   }
 
-  const isFormOpen = editing !== null || form.name || form.bio;
+  const isFormOpen = editing !== null || !!form.name || !!form.bio;
 
   return (
     <AdminShell>
@@ -126,7 +140,7 @@ export default function AuthorsAdmin() {
         )}
 
         {/* Form panel */}
-        {(isFormOpen || editing) && (
+        {isFormOpen && (
           <div className="bg-white rounded-xl border p-5 mb-6 space-y-4" style={{ borderColor: "#f0ece8" }}>
             <h2 className="text-sm font-semibold text-gray-900 pb-3" style={{ borderBottom: "1px solid #f5f3f0" }}>
               {editing ? `Edit: ${editing.name}` : "New author"}
@@ -160,7 +174,7 @@ export default function AuthorsAdmin() {
                     </button>
                   )}
                 </div>
-                {editing && <p className="text-xs text-gray-400 mt-1">Slug cannot be changed after creation (it is the Firestore document ID).</p>}
+                {editing && <p className="text-xs text-gray-400 mt-1">Slug cannot be changed after creation.</p>}
               </div>
 
               <div>
@@ -208,7 +222,9 @@ export default function AuthorsAdmin() {
             </div>
           ) : authors.length === 0 ? (
             <div className="p-10 text-center">
-              <p className="text-sm text-gray-500">No authors yet. Create one above.</p>
+              <div className="text-3xl mb-3" style={{ opacity: 0.12 }}>◉</div>
+              <p className="text-sm text-gray-500 font-medium mb-1">No authors yet</p>
+              <p className="text-xs text-gray-400">Create your first author using the button above.</p>
             </div>
           ) : (
             <table className="w-full text-sm">

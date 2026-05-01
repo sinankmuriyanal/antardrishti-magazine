@@ -187,7 +187,7 @@ export default function ArticlesAdmin() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden xl:table-cell">Media</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Pick</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider" style={{ position: "sticky", right: 0, background: "#faf9f6", zIndex: 1 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -303,7 +303,7 @@ export default function ArticlesAdmin() {
                         </td>
 
                         {/* Actions */}
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right" style={{ position: "sticky", right: 0, background: "white", boxShadow: "-4px 0 8px rgba(0,0,0,0.04)" }}>
                           <div className="flex items-center justify-end gap-3">
                             <a
                               href={`/article/${a.slug || a.displayId}`}

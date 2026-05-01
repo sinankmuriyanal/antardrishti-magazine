@@ -17,7 +17,7 @@ function formatDate(timestamp: unknown): string {
 }
 
 function sectionHref(s: Section) { return `/section/${s.slug}`; }
-function articleHref(a: Article) { return `/article/${a.displayId}`; }
+function articleHref(a: Article) { return `/article/${a.slug || a.displayId}`; }
 
 /* ─── Section label chip ─── */
 function SectionChip({ name, href, dark = true }: { name: string; href: string; dark?: boolean }) {

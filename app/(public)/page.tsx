@@ -52,7 +52,7 @@ export default async function HomePage() {
               </a>
             </div>
           ) : (
-            <div className="row g-0 col-match" style={{ minHeight: 540 }}>
+            <div className="row g-2 lg:g-0 col-match" style={{ minHeight: 540 }}>
               {/* Main hero */}
               {featured && (
                 <div className="col-12 lg:col-8">
