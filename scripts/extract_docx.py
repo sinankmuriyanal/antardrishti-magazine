@@ -26,7 +26,6 @@ DOCX_PATH = Path("../Antardrishti 2nd Edition.docx")
 OUT_DIR   = Path("extracted")
 IMG_DIR   = OUT_DIR / "images"
 
-# Docx section number -> (original section number, section id, last ed-1 article number)
 DOCX_SECTION_MAP = {
     1: (4, "section-4", 3),   # What's Buzzing
     2: (3, "section-3", 4),   # Analytics
@@ -35,9 +34,13 @@ DOCX_SECTION_MAP = {
     5: (6, "section-6", 4),   # Campus Chronicles
 }
 
+# Namespace constants for VML images (not in python-docx default nsmap)
+_VML_IMAGEDATA = "{urn:schemas-microsoft-com:vml}imagedata"
+_R_ID = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
+
 
 def extract_all_images(doc: Document) -> dict:
-    """Return {rId: bytes}."""
+    """Return {rId: bytes} from all document relationships."""
     images = {}
     for rel in doc.part.rels.values():
         if "image" in rel.reltype:
@@ -48,23 +51,54 @@ def extract_all_images(doc: Document) -> dict:
     return images
 
 
-def inline_image_rids(para) -> list:
+def all_body_paragraphs(doc: Document) -> list:
+    """
+    Return ALL paragraph lxml elements in document order,
+    including those nested inside tables and textboxes.
+    doc.paragraphs only walks direct children; this does a full recursive walk.
+    """
+    body = doc.element.body
+    result = []
+
+    def walk(element):
+        for child in element:
+            if child.tag == qn("w:p"):
+                result.append(child)
+            else:
+                walk(child)
+
+    walk(body)
+    return result
+
+
+def para_text(p_el) -> str:
+    """Concatenate all w:t text in a paragraph element."""
+    parts = []
+    for t in p_el.iter(qn("w:t")):
+        parts.append(t.text or "")
+    return "".join(parts).strip()
+
+
+def para_image_rids(p_el) -> list:
+    """Find all image rIds in a paragraph element (DrawingML + VML)."""
     rids = []
-    for run in para.runs:
-        for el in run._r.iter():
-            if el.tag == qn("a:blip"):
-                rid = el.get(qn("r:embed"))
-                if rid:
-                    rids.append(rid)
+    for blip in p_el.iter(qn("a:blip")):
+        rid = blip.get(qn("r:embed"))
+        if rid and rid not in rids:
+            rids.append(rid)
+    for imagedata in p_el.iter(_VML_IMAGEDATA):
+        rid = imagedata.get(_R_ID)
+        if rid and rid not in rids:
+            rids.append(rid)
     return rids
 
 
 def save_image(data: bytes, path: Path) -> str:
+    """Save image as JPEG. path should already have .jpg extension."""
     try:
         img = Image.open(io.BytesIO(data))
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
-        path = path.with_suffix(".jpg")
         img.save(path, "JPEG", quality=85)
         return str(path)
     except Exception as e:
@@ -72,16 +106,14 @@ def save_image(data: bytes, path: Path) -> str:
         return ""
 
 
-def is_section_header(text: str) -> int | None:
-    """Return docx section number if this looks like '1 Section Name', else None."""
-    m = re.match(r"^(\d+)\s+[A-Z‘’'\"]", text)
+def is_section_header(text: str):
+    m = re.match(r"^(\d+)\s+[A-Z'''\"]", text)
     if m and not re.match(r"^\d+\.\d+", text):
         return int(m.group(1))
     return None
 
 
 def is_article_header(text: str):
-    """Return (docx_sec, docx_art, title) if this looks like '1.1 Title', else None."""
     m = re.match(r"^(\d+)\.(\d+)\s+(.+)", text)
     if m:
         return int(m.group(1)), int(m.group(2)), m.group(3).strip()
@@ -101,16 +133,17 @@ def main():
     all_images = extract_all_images(doc)
     print(f"  Found {len(all_images)} embedded images")
 
-    paragraphs = doc.paragraphs
+    # Walk ALL paragraphs including table cells
+    paragraphs = all_body_paragraphs(doc)
     n = len(paragraphs)
+    print(f"  Found {n} total paragraphs (including table cells)")
 
-    # ── Pass 1: identify article boundaries ─────────────────────────────────
-    # We need to know ALL article start indices first so we know where each ends.
-    boundaries = []  # (para_index, docx_sec, docx_art, title)
+    # ── Pass 1: identify article boundaries ──────────────────────────────────
+    boundaries = []
     current_docx_sec = None
 
-    for i, para in enumerate(paragraphs):
-        text = para.text.strip()
+    for i, p_el in enumerate(paragraphs):
+        text = para_text(p_el)
         if not text:
             continue
         sec = is_section_header(text)
@@ -124,17 +157,17 @@ def main():
     print(f"  Found {len(boundaries)} articles")
 
     # ── Pass 2: extract each article ─────────────────────────────────────────
-    # Track how many articles we've assigned per original section for numbering
-    orig_sec_count: dict[int, int] = {}
-
+    orig_sec_count: dict = {}
     articles = []
 
-    for idx, (start_i, docx_sec, docx_art_num, title) in enumerate(
+    for idx, (start_i, docx_sec, _docx_art_num, title) in enumerate(
         (b[0], b[1], b[2], b[4]) for b in boundaries
     ):
         end_i = boundaries[idx + 1][0] if idx + 1 < len(boundaries) else n
 
-        orig_sec, sec_id, offset = DOCX_SECTION_MAP.get(docx_sec, (docx_sec, f"section-{docx_sec}", 0))
+        orig_sec, sec_id, offset = DOCX_SECTION_MAP.get(
+            docx_sec, (docx_sec, f"section-{docx_sec}", 0)
+        )
 
         orig_sec_count[orig_sec] = orig_sec_count.get(orig_sec, 0) + 1
         new_art_num = offset + orig_sec_count[orig_sec]
@@ -142,7 +175,6 @@ def main():
 
         print(f"  {display_id}: {title[:60]}")
 
-        # Collect paragraphs for this article (excluding the header line itself)
         body_paras = []
         author_name = ""
         author_bio = ""
@@ -151,45 +183,43 @@ def main():
         first_image_found = False
 
         for i in range(start_i + 1, end_i):
-            para = paragraphs[i]
-            text = para.text.strip()
-            rids = inline_image_rids(para)
+            p_el = paragraphs[i]
+            text = para_text(p_el)
+            rids = para_image_rids(p_el)
 
-            # First image after header = featured image
             if rids and not first_image_found:
                 featured_image_rid = rids[0]
                 first_image_found = True
                 continue
 
-            # Author line pattern: last non-empty paragraph before next boundary,
-            # with an embedded image, formatted as "Name, Title, Organization"
-            is_last_zone = i >= end_i - 8  # last ~8 paragraphs
+            is_last_zone = i >= end_i - 8
             if rids and is_last_zone and text and re.search(r",", text):
-                # This is the author designation line with photo
                 author_image_rid = rids[0]
                 parts = [p.strip() for p in text.split(",", 1)]
                 author_name = parts[0]
-                author_bio = text  # full "Name, Title, Org"
+                author_bio = text
                 continue
 
             if text:
                 body_paras.append(text)
 
-        # Build HTML content
         html = "\n".join(f"<p>{p}</p>" for p in body_paras)
         excerpt = body_paras[0][:200] + "..." if body_paras else ""
 
-        # Save featured image
+        # Use underscore for dot in display_id to avoid pathlib suffix confusion
+        safe_id = display_id.replace(".", "_")
+
         featured_image_path = ""
         if featured_image_rid and featured_image_rid in all_images:
-            out = IMG_DIR / f"article-{display_id}-featured"
+            out = IMG_DIR / f"article-{safe_id}-featured.jpg"
             featured_image_path = save_image(all_images[featured_image_rid], out)
+            print(f"    featured image: {featured_image_path}")
 
-        # Save author image
         author_image_path = ""
         if author_image_rid and author_image_rid in all_images:
-            out = IMG_DIR / f"article-{display_id}-author"
+            out = IMG_DIR / f"article-{safe_id}-author.jpg"
             author_image_path = save_image(all_images[author_image_rid], out)
+            print(f"    author image:   {author_image_path}")
 
         articles.append({
             "sectionId": sec_id,
@@ -215,7 +245,12 @@ def main():
 
     print(f"\nDone! {len(articles)} articles -> {out_path}")
     print(f"Images saved to {IMG_DIR}/")
-    print("\nNext: review extracted/articles.json, then run scripts/import_to_firestore.js")
+
+    # Summary
+    feat_count = sum(1 for a in articles if a["featuredImage"])
+    auth_count = sum(1 for a in articles if a["authorImage"])
+    print(f"  Featured images extracted: {feat_count}/{len(articles)}")
+    print(f"  Author images extracted:   {auth_count}/{len(articles)}")
 
 
 if __name__ == "__main__":
