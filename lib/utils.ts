@@ -1,3 +1,9 @@
+export function absoluteImgUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("http") || url.startsWith("/")) return url;
+  return `/${url}`;
+}
+
 export function slugify(title: string): string {
   return title
     .toLowerCase()

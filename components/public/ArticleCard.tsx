@@ -1,4 +1,5 @@
 import type { Article, Section } from "@/types";
+import { absoluteImgUrl } from "@/lib/utils";
 
 const FALLBACK = "/assets/images/common/img-fallback.png";
 
@@ -43,7 +44,7 @@ function SectionChip({ name, href, dark = true }: { name: string; href: string; 
 
 /* ─── HeroArticleCard — main featured article ─── */
 export function HeroArticleCard({ article, section }: { article: Article; section: Section }) {
-  const img = article.featuredImage || FALLBACK;
+  const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   const date = formatDate(article.publishedAt);
   return (
     <article
@@ -121,9 +122,9 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
             </p>
           )}
           <div className="hstack gap-2 mt-3" style={{ alignItems: "center" }}>
-            {article.authorImage && (
+            {absoluteImgUrl(article.authorImage) && (
               <img
-                src={article.authorImage}
+                src={absoluteImgUrl(article.authorImage)!}
                 alt=""
                 style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.3)" }}
               />
@@ -153,7 +154,7 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
 
 /* ─── OverlayCard — grid card with image + bottom text ─── */
 export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { article: Article; section: Section; ratio?: string }) {
-  const img = article.featuredImage || FALLBACK;
+  const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   return (
     <article
       className="post type-post panel uc-transition-toggle overflow-hidden h-100"
@@ -214,7 +215,7 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
 
 /* ─── MiniOverlayCard — compact stacked card for hero sidebar ─── */
 export function MiniOverlayCard({ article, section }: { article: Article; section: Section }) {
-  const img = article.featuredImage || FALLBACK;
+  const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   return (
     <article
       className="post type-post panel uc-transition-toggle overflow-hidden h-100"
@@ -268,7 +269,7 @@ export function MiniOverlayCard({ article, section }: { article: Article; sectio
 
 /* ─── ListCard — horizontal thumbnail + text ─── */
 export function ListCard({ article, section, showExcerpt = false }: { article: Article; section: Section; showExcerpt?: boolean }) {
-  const img = article.featuredImage || FALLBACK;
+  const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   const date = formatDate(article.publishedAt);
   return (
     <article className="post type-post panel uc-transition-toggle">
@@ -355,7 +356,7 @@ export function ListCard({ article, section, showExcerpt = false }: { article: A
 
 /* ─── SectionFeaturedCard — wide horizontal card for section page hero ─── */
 export function SectionFeaturedCard({ article, section }: { article: Article; section: Section }) {
-  const img = article.featuredImage || FALLBACK;
+  const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   const date = formatDate(article.publishedAt);
   return (
     <article className="post type-post panel uc-transition-toggle overflow-hidden" style={{ borderRadius: "6px" }}>
@@ -415,9 +416,9 @@ export function SectionFeaturedCard({ article, section }: { article: Article; se
             </p>
           )}
           <div className="hstack gap-2 pt-3" style={{ borderTop: "1px solid var(--color-border)" }}>
-            {article.authorImage && (
+            {absoluteImgUrl(article.authorImage) && (
               <img
-                src={article.authorImage}
+                src={absoluteImgUrl(article.authorImage)!}
                 alt=""
                 style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
               />

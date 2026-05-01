@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { fetchArticleBySlugServer, fetchArticleByDisplayIdServer } from "@/lib/articles-server";
 import { getSectionByNumber } from "@/lib/sections";
 import { CommentSection } from "@/components/public/CommentSection";
+import { absoluteImgUrl } from "@/lib/utils";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -13,7 +14,7 @@ function sanitizeContentHtml(html: string): string {
     .replace(/\s+data-uc-lightbox(?:="[^"]*")?/g, "")
     .replace(/\s+data-uc-img(?:="[^"]*")?/g, "")
     .replace(/\s+data-uc-svg(?:="[^"]*")?/g, "")
-    .replace(/\s+data-src="assets\//g, ' data-src="/assets/');
+    .replace(/ (src|data-src)="assets\//g, ' $1="/assets/');
 }
 
 interface Props { params: Promise<{ slug: string }> }
@@ -61,7 +62,8 @@ export default async function ArticlePage({ params }: Props) {
 
   const shareUrl = `/article/${article.slug || article.displayId}`;
 
-  const coverImg = article.featuredImage || FALLBACK;
+  const coverImg = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
+  const authorImgUrl = absoluteImgUrl(article.authorImage);
 
   return (
     <>
@@ -169,10 +171,11 @@ export default async function ArticlePage({ params }: Props) {
 
             {/* Meta row */}
             <div className="hstack gap-3 justify-center items-center flex-wrap" style={{ marginTop: "0.5rem" }}>
-              {article.authorImage && (
+              {authorImgUrl && (
                 <img
-                  src={article.authorImage}
+                  src={authorImgUrl}
                   alt={article.authorName || ""}
+                  loading="eager"
                   style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.2)" }}
                 />
               )}
@@ -283,11 +286,11 @@ export default async function ArticlePage({ params }: Props) {
             {article.authorName && (
               <div className="author-bio-card mt-2 mb-5">
                 <div className="row g-4 items-center">
-                  {article.authorImage && (
+                  {authorImgUrl && (
                     <div className="col-12 sm:col-auto">
                       <figure className="m-0 overflow-hidden" style={{ width: 90, height: 90, borderRadius: "50%", flexShrink: 0 }}>
                         <img
-                          src={article.authorImage}
+                          src={authorImgUrl}
                           alt={article.authorName}
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                         />
