@@ -201,22 +201,12 @@ export default function ArticlesAdmin() {
                       >
                         {/* Thumbnail */}
                         <td className="px-4 py-3">
-                          {a.featuredImage ? (
-                            <img
-                              src={a.featuredImage}
-                              alt=""
-                              className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                              style={{ border: "1px solid #f0ece8" }}
-                            />
-                          ) : (
-                            <div
-                              className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center"
-                              style={{ background: "#fef3f0", border: "1px dashed #fca99a" }}
-                              title="No cover image"
-                            >
-                              <span className="text-red-300 text-xs">?</span>
-                            </div>
-                          )}
+                          <img
+                            src={a.featuredImage || "/assets/images/common/img-fallback.png"}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                            style={{ border: a.featuredImage ? "1px solid #f0ece8" : "1px dashed #fca99a" }}
+                          />
                         </td>
 
                         {/* Title */}

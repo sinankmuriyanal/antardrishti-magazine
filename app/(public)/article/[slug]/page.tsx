@@ -206,17 +206,15 @@ export default async function ArticlePage({ params }: Props) {
         </div>
 
         {/* ── Featured image ── */}
-        {article.featuredImage && (
-          <div className="container max-w-xl mt-2 mb-4 lg:mb-6" style={{ position: "relative", zIndex: 1 }}>
-            <figure className="featured-image m-0 overflow-hidden" style={{ borderRadius: "14px", aspectRatio: "16/9", maxHeight: 520 }}>
-              <img
-                src={article.featuredImage}
-                alt={article.title}
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-              />
-            </figure>
+        <div className="container max-w-xl mt-2 mb-4 lg:mb-6" style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ borderRadius: "14px", overflow: "hidden", aspectRatio: "16/9", maxHeight: 520 }}>
+            <img
+              src={article.featuredImage || "/assets/images/common/img-fallback.png"}
+              alt={article.title}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
           </div>
-        )}
+        </div>
 
         {/* ── Article body ── */}
         <div className="panel mt-2">
@@ -224,7 +222,6 @@ export default async function ArticlePage({ params }: Props) {
 
             <div
               className="post-content panel"
-              data-uc-lightbox="animation: scale"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
 

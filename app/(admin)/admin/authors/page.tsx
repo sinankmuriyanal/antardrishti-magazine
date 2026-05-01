@@ -113,24 +113,83 @@ export default function AuthorsAdmin() {
     } catch (e) { setError(String(e)); }
   }
 
+  const [syncing, setSyncing] = useState(false);
+
+  async function syncFromArticles() {
+    setSyncing(true);
+    setError("");
+    try {
+      const res = await fetch("/api/articles");
+      if (!res.ok) throw new Error("Failed to fetch articles");
+      const articles = await res.json() as {
+        authorName?: string; authorBio?: string; authorImage?: string; authorLinkedIn?: string;
+      }[];
+
+      const seen = new Set(authors.map((a) => a.slug));
+      const bySlug = new Map<string, { name: string; bio: string; photo: string; linkedin: string; slug: string }>();
+
+      for (const a of articles) {
+        if (!a.authorName?.trim()) continue;
+        const slug = slugify(a.authorName.trim());
+        if (!slug || seen.has(slug) || bySlug.has(slug)) continue;
+        bySlug.set(slug, {
+          name: a.authorName.trim(),
+          bio: a.authorBio ?? "",
+          photo: a.authorImage ?? "",
+          linkedin: a.authorLinkedIn ?? "",
+          slug,
+        });
+      }
+
+      if (bySlug.size === 0) {
+        setError("All authors from articles are already in the list.");
+        setSyncing(false);
+        return;
+      }
+
+      await Promise.all(
+        [...bySlug.values()].map((author) =>
+          fetch("/api/authors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(author),
+          })
+        )
+      );
+      await load();
+    } catch (e) { setError(String(e)); }
+    setSyncing(false);
+  }
+
   const isFormOpen = editing !== null || !!form.name || !!form.bio;
 
   return (
     <AdminShell>
       <div className="max-w-5xl">
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Authors</h1>
             {!loading && <p className="text-sm text-gray-400 mt-0.5">{authors.length} authors</p>}
           </div>
-          <button
-            onClick={startNew}
-            className="flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2 rounded-lg"
-            style={{ background: "#e8521d" }}
-          >
-            <span className="text-base">+</span> New author
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={syncFromArticles}
+              disabled={syncing || loading}
+              className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg border transition-colors disabled:opacity-50"
+              style={{ borderColor: "#e8521d", color: "#e8521d", background: "#fef3f0" }}
+              title="Import author profiles from existing article data"
+            >
+              {syncing ? "Syncing…" : "↓ Sync from articles"}
+            </button>
+            <button
+              onClick={startNew}
+              className="flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2 rounded-lg"
+              style={{ background: "#e8521d" }}
+            >
+              <span className="text-base">+</span> New author
+            </button>
+          </div>
         </div>
 
         {error && (

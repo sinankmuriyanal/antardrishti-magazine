@@ -24,8 +24,8 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero ── */}
-      <div className="section panel overflow-hidden" style={{ background: "var(--color-ink, #0F1923)" }}>
-        <div className="container-fluid p-0">
+      <div className="section panel" style={{ background: "var(--color-ink, #0F1923)", paddingTop: "2rem", paddingBottom: "2rem" }}>
+        <div className="container max-w-xl">
           {articles.length === 0 ? (
             <div className="panel py-9 text-center" style={{ minHeight: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
               <div style={{ marginBottom: "1rem", opacity: 0.2 }}>
@@ -52,10 +52,10 @@ export default async function HomePage() {
               </a>
             </div>
           ) : (
-            <div className="row g-2 lg:g-0 col-match" style={{ minHeight: 540 }}>
+            <div className="row g-3 col-match" style={{ minHeight: 500 }}>
               {/* Main hero */}
               {featured && (
-                <div className="col-12 lg:col-8">
+                <div className="col-12 lg:col-8" style={{ borderRadius: "10px", overflow: "hidden" }}>
                   <HeroArticleCard
                     article={featured}
                     section={getSectionByNumber(featured.sectionNumber)!}
@@ -64,17 +64,14 @@ export default async function HomePage() {
               )}
               {/* Sidebar stack */}
               {heroSidebar.length > 0 && (
-                <div className="col-12 lg:col-4" style={{ background: "#0a0d12" }}>
-                  <div className="vstack h-100">
-                    {heroSidebar.map((a, i) => (
-                      <div key={a.id} className="flex-fill" style={{ minHeight: 0 }}>
+                <div className="col-12 lg:col-4">
+                  <div className="vstack gap-3 h-100">
+                    {heroSidebar.map((a) => (
+                      <div key={a.id} className="flex-fill" style={{ minHeight: 0, borderRadius: "10px", overflow: "hidden" }}>
                         <MiniOverlayCard
                           article={a}
                           section={getSectionByNumber(a.sectionNumber)!}
                         />
-                        {i < heroSidebar.length - 1 && (
-                          <div style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
-                        )}
                       </div>
                     ))}
                   </div>
