@@ -165,3 +165,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-01] update: (admin)/admin/articles/page.tsx,(admin)/admin/authors/page.tsx,(admin)/admin/page.tsx,(public)/article/[slug]/page.tsx,(public)/layout.tsx,(public)/page.tsx
 - [2026-05-01] update: (admin)/admin/articles/page.tsx,(admin)/admin/authors/page.tsx,(public)/article/[slug]/page.tsx,(public)/page.tsx,CLAUDE.md
 - [2026-05-01] fix: article page images — strip UIKit data-uc-img to prevent src overwrite with relative data-src paths
+- [2026-05-01] fix: ensure all image URLs are absolute — prevent relative paths resolving to /article/assets/... on non-root routes
