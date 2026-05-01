@@ -26,6 +26,8 @@ export default function ArticlesAdmin() {
   const [search, setSearch] = useState("");
   const [sectionFilter, setSectionFilter] = useState<number | "">("");
   const [editionFilter, setEditionFilter] = useState<1 | 2 | "">("");
+  const [slugging, setSluggging] = useState(false);
+  const [slugMsg, setSlugMsg] = useState("");
 
   async function load() {
     setLoading(true);
@@ -69,6 +71,20 @@ export default function ArticlesAdmin() {
 
   const missingFeatured = articles.filter((a) => !a.featuredImage).length;
   const missingAuthor = articles.filter((a) => !a.authorImage).length;
+  const missingSlugs = articles.filter((a) => !a.slug).length;
+
+  async function generateSlugs() {
+    setSluggging(true);
+    setSlugMsg("");
+    try {
+      const res = await fetch("/api/admin/migrate-slugs", { method: "POST" });
+      const data = await res.json() as { updated?: number; message?: string; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+      setSlugMsg(data.message ?? `Updated ${data.updated} articles.`);
+      await load();
+    } catch (e) { setSlugMsg(String(e)); }
+    setSluggging(false);
+  }
 
   return (
     <AdminShell>
@@ -98,6 +114,34 @@ export default function ArticlesAdmin() {
             <span className="text-base leading-none">+</span> New Article
           </a>
         </div>
+
+        {/* Slug migration banner */}
+        {!loading && missingSlugs > 0 && (
+          <div className="mb-5 flex items-center justify-between gap-4 rounded-xl px-5 py-3.5 border" style={{ background: "#fffbeb", borderColor: "#fde68a" }}>
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                {missingSlugs} article{missingSlugs !== 1 ? "s" : ""} have no URL slug
+              </p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                URLs currently show numbers like <code className="font-mono bg-amber-100 px-1 rounded">/article/1.1</code> — generate slugs to get clean URLs like <code className="font-mono bg-amber-100 px-1 rounded">/article/editorial-note</code>
+              </p>
+              {slugMsg && <p className="text-xs text-amber-700 mt-1 font-medium">{slugMsg}</p>}
+            </div>
+            <button
+              onClick={generateSlugs}
+              disabled={slugging}
+              className="flex-shrink-0 text-sm font-semibold px-4 py-2 rounded-lg text-white transition-opacity disabled:opacity-50"
+              style={{ background: "#d97706" }}
+            >
+              {slugging ? "Generating…" : "Generate slugs"}
+            </button>
+          </div>
+        )}
+        {!loading && missingSlugs === 0 && slugMsg && (
+          <div className="mb-5 rounded-xl px-5 py-3 border text-sm text-green-700 font-medium" style={{ background: "#f0fdf4", borderColor: "#bbf7d0" }}>
+            {slugMsg}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-5">

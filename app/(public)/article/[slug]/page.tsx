@@ -6,10 +6,11 @@ import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
+const FALLBACK = "/assets/images/common/img-fallback.png";
+
 interface Props { params: Promise<{ slug: string }> }
 
 async function resolveArticle(slug: string) {
-  // Try slug first, fall back to displayId for backward compatibility
   const bySlug = await fetchArticleBySlugServer(slug);
   if (bySlug) return bySlug;
   return fetchArticleByDisplayIdServer(slug);
@@ -44,60 +45,54 @@ export default async function ArticlePage({ params }: Props) {
 
   const section = getSectionByNumber(article.sectionNumber);
 
-  const publishedDate = article.publishedAt
-    ? new Date((article.publishedAt as unknown as { seconds: number }).seconds * 1000)
-        .toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+  const ts = article.publishedAt as unknown as { seconds?: number; _seconds?: number } | null;
+  const epochMs = ts ? ((ts.seconds ?? ts._seconds ?? 0) * 1000) : 0;
+  const publishedDate = epochMs
+    ? new Date(epochMs).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : "";
 
-  const shareUrl = typeof window === "undefined"
-    ? `/article/${article.slug || article.displayId}`
-    : `${window.location.origin}/article/${article.slug || article.displayId}`;
+  const shareUrl = `/article/${article.slug || article.displayId}`;
+
+  const coverImg = article.featuredImage || FALLBACK;
 
   return (
     <>
-      {/* ── Breadcrumb bar ── */}
-      <div className="breadcrumb-bar">
-        <div className="container max-w-xl">
-          <ul className="breadcrumb nav-x gap-1 m-0">
-            <li>
-              <a href="/" style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none", fontFamily: "var(--font-body)" }}>
-                Home
-              </a>
-            </li>
-            <li><i className="unicon-chevron-right" style={{ opacity: 0.3, fontSize: "0.65rem" }}></i></li>
-            {section && (
-              <>
-                <li>
-                  <a
-                    href={`/section/${section.slug}`}
-                    style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none", fontFamily: "var(--font-body)" }}
-                  >
-                    {section.name}
-                  </a>
-                </li>
-                <li><i className="unicon-chevron-right" style={{ opacity: 0.3, fontSize: "0.65rem" }}></i></li>
-              </>
-            )}
-            <li>
-              <span style={{ color: "rgba(255,255,255,0.65)", fontFamily: "var(--font-body)" }} className="text-truncate">
-                {article.title}
-              </span>
-            </li>
-          </ul>
+      {/* ── Dark header block — full dark bg covers breadcrumb + header + image ── */}
+      <div style={{ background: "var(--color-ink, #0F1923)" }}>
+
+        {/* Breadcrumb */}
+        <div className="breadcrumb-bar">
+          <div className="container max-w-xl">
+            <ul className="breadcrumb nav-x gap-1 m-0">
+              <li>
+                <a href="/" style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none", fontFamily: "var(--font-body)" }}>
+                  Home
+                </a>
+              </li>
+              <li><i className="unicon-chevron-right" style={{ opacity: 0.3, fontSize: "0.65rem" }}></i></li>
+              {section && (
+                <>
+                  <li>
+                    <a href={`/section/${section.slug}`} style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none", fontFamily: "var(--font-body)" }}>
+                      {section.name}
+                    </a>
+                  </li>
+                  <li><i className="unicon-chevron-right" style={{ opacity: 0.3, fontSize: "0.65rem" }}></i></li>
+                </>
+              )}
+              <li>
+                <span style={{ color: "rgba(255,255,255,0.65)", fontFamily: "var(--font-body)" }} className="text-truncate">
+                  {article.title}
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
 
-      {/* ── Dark header bg ── */}
-      <div
-        className="position-absolute top-0 start-0 end-0"
-        style={{ minHeight: "52px", background: "var(--color-ink)", zIndex: 0 }}
-      />
+        {/* Article header */}
+        <div className="container max-w-xl">
+          <div className="panel vstack gap-3 md:gap-4 text-center" style={{ paddingTop: "2.5rem", paddingBottom: "1.5rem" }}>
 
-      <article className="post type-post single-post py-4 lg:py-6 xl:py-9">
-
-        {/* ── Article header ── */}
-        <div className="container max-w-xl" style={{ position: "relative", zIndex: 1 }}>
-          <div className="panel vstack gap-3 md:gap-4 text-center" style={{ paddingTop: "2rem", paddingBottom: "1.5rem" }}>
             {/* Section badge */}
             {section && (
               <div>
@@ -150,7 +145,7 @@ export default async function ArticlePage({ params }: Props) {
               </p>
             )}
 
-            {/* Excerpt */}
+            {/* Excerpt (when no subtitle) */}
             {!article.subtitle && article.excerpt && (
               <p style={{
                 fontFamily: "var(--font-body)",
@@ -205,19 +200,23 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         </div>
 
-        {/* ── Featured image ── */}
-        <div className="container max-w-xl mt-2 mb-4 lg:mb-6" style={{ position: "relative", zIndex: 1 }}>
+        {/* Featured image — inside dark block so it sits on the ink bg */}
+        <div className="container max-w-xl" style={{ paddingBottom: "2.5rem" }}>
           <div style={{ borderRadius: "14px", overflow: "hidden", aspectRatio: "16/9", maxHeight: 520 }}>
             <img
-              src={article.featuredImage || "/assets/images/common/img-fallback.png"}
+              src={coverImg}
               alt={article.title}
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           </div>
         </div>
 
-        {/* ── Article body ── */}
-        <div className="panel mt-2">
+      </div>
+      {/* ── End dark header block ── */}
+
+      {/* ── Article body (light background) ── */}
+      <article className="post type-post single-post">
+        <div className="panel py-5 lg:py-7">
           <div className="container max-w-lg">
 
             <div
@@ -278,7 +277,6 @@ export default async function ArticlePage({ params }: Props) {
                   {article.authorImage && (
                     <div className="col-12 sm:col-auto">
                       <figure className="m-0 overflow-hidden" style={{ width: 90, height: 90, borderRadius: "50%", flexShrink: 0 }}>
-                        {/* Plain img — no data-uc-img to avoid UIKit lazy-loading clearing src */}
                         <img
                           src={article.authorImage}
                           alt={article.authorName}

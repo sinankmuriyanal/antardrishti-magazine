@@ -24,7 +24,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero ── */}
-      <div className="section panel" style={{ background: "var(--color-ink, #0F1923)", paddingTop: "2rem", paddingBottom: "2rem" }}>
+      <div className="section panel" style={{ background: "#fff", paddingTop: "2rem", paddingBottom: "2rem" }}>
         <div className="container max-w-xl">
           {articles.length === 0 ? (
             <div className="panel py-9 text-center" style={{ minHeight: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>

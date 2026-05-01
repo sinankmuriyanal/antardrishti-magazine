@@ -163,3 +163,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-01] feat: admin API migration, slug system, authors collection, hooks
 - [2026-05-01] docs(changelog): sync 2026-05-01
 - [2026-05-01] update: (admin)/admin/articles/page.tsx,(admin)/admin/authors/page.tsx,(admin)/admin/page.tsx,(public)/article/[slug]/page.tsx,(public)/layout.tsx,(public)/page.tsx
+- [2026-05-01] update: (admin)/admin/articles/page.tsx,(admin)/admin/authors/page.tsx,(public)/article/[slug]/page.tsx,(public)/page.tsx,CLAUDE.md
