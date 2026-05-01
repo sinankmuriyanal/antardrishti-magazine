@@ -90,9 +90,16 @@ Magazine/                      Cloned antardrishtidse/Magazine (source HTML)
 **`articles`** — document ID = displayId (e.g. `"2.4"`)
 ```
 sectionId, sectionNumber, articleNumber, displayId,
-title, excerpt, content (HTML),
-featuredImage (Storage URL), authorName, authorImage, authorLinkedIn, authorBio,
+slug (URL slug, e.g. "the-future-of-analytics"),
+title, subtitle?, excerpt, content (HTML),
+readingTime (minutes, auto-calc), isEditorsPick,
+featuredImage (Storage URL), authorName, authorImage, authorLinkedIn, authorBio, authorId?,
 tags[], edition (1|2), isPublished, publishedAt, createdAt, updatedAt
+```
+
+**`authors`** — document ID = slug (e.g. `"sinan-khan"`)
+```
+name, bio, photo (Storage URL), linkedin, slug, createdAt, updatedAt
 ```
 
 **`sections`** — document ID = `"section-N"`
@@ -148,3 +155,8 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-04-30] docs(changelog): sync 2026-04-29
 - [2026-04-30] docs(changelog): sync 2026-04-30
 - [2026-04-30] update: (admin)/admin/articles/page.tsx,(admin)/admin/page.tsx,(public)/article/[displayId]/page.tsx,admin/ArticleForm.tsx,CLAUDE.md,globals.css
+- [2026-05-01] feat: admin CRUD overhaul — all admin data ops now route through Firebase Admin SDK API routes (bypasses Firestore security rules); added /api/articles/[id] and /api/comments/[id] PATCH/DELETE; added lib/articles-admin.ts fetch-based helpers; admin dashboard, articles list, comments page, and CommentSection all migrated off client Firestore SDK
+- [2026-05-01] feat: article slug system — slugify() utility, slug field on Article type, auto-generate slug from title in ArticleForm (with manual override), /admin/migrate-slugs one-click migration tool, fetchArticleBySlug server + client helpers
+- [2026-05-01] feat: authors collection — Author type, lib/authors.ts CRUD, /admin/authors page with photo upload and inline edit, author slug as Firestore doc ID
+- [2026-05-01] feat: admin ArticleForm additions — isEditorsPick amber toggle, subtitle field, readingTime auto-calc from word count, inline error display replaces alert() calls, edit page shows article title in breadcrumb
+- [2026-05-01] feat: editor's pick star toggle column in admin articles list, View link uses slug if present
