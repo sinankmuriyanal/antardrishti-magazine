@@ -160,3 +160,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-01] feat: authors collection — Author type, lib/authors.ts CRUD, /admin/authors page with photo upload and inline edit, author slug as Firestore doc ID
 - [2026-05-01] feat: admin ArticleForm additions — isEditorsPick amber toggle, subtitle field, readingTime auto-calc from word count, inline error display replaces alert() calls, edit page shows article title in breadcrumb
 - [2026-05-01] feat: editor's pick star toggle column in admin articles list, View link uses slug if present
+- [2026-05-01] feat: admin API migration, slug system, authors collection, hooks
