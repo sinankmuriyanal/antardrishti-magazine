@@ -2,8 +2,6 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import type { Article } from "@/types";
 
 interface Stats {
@@ -25,13 +23,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [artSnap, comSnap, pendSnap] = await Promise.all([
-          getDocs(collection(db, "articles")),
-          getDocs(collection(db, "comments")),
-          getDocs(query(collection(db, "comments"), where("isApproved", "==", false))),
+        const [articles, allComments] = await Promise.all([
+          fetch("/api/articles").then((r) => r.json() as Promise<Article[]>),
+          fetch("/api/comments").then((r) => r.json() as Promise<{ isApproved: boolean }[]>),
         ]);
 
-        const articles = artSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Article));
+        const pending = allComments.filter((c) => !c.isApproved).length;
         const missingCoverList = articles.filter((a) => !a.featuredImage);
         const missingPhotoList = articles.filter((a) => !a.authorImage);
         const allMissing = articles
@@ -45,10 +42,10 @@ export default function AdminDashboard() {
           }));
 
         setStats({
-          articles: artSnap.size,
+          articles: articles.length,
           published: articles.filter((a) => a.isPublished).length,
-          comments: comSnap.size,
-          pending: pendSnap.size,
+          comments: allComments.length,
+          pending,
           missingCover: missingCoverList.length,
           missingAuthorPhoto: missingPhotoList.length,
           missingArticles: allMissing,

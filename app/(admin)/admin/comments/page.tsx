@@ -2,9 +2,7 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
-import { fetchAllComments, approveComment, deleteComment } from "@/lib/comments";
 import type { Comment } from "@/types";
-
 export default function CommentsAdmin() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,20 +10,23 @@ export default function CommentsAdmin() {
 
   async function load() {
     setLoading(true);
-    try { setComments(await fetchAllComments()); } catch { setComments([]); }
+    try {
+      const data = await fetch("/api/comments").then((r) => r.json() as Promise<Comment[]>);
+      setComments(data);
+    } catch { setComments([]); }
     setLoading(false);
   }
 
   useEffect(() => { load(); }, []);
 
   async function handleApprove(c: Comment) {
-    await approveComment(c.id);
+    await fetch(`/api/comments/${c.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isApproved: true }) });
     setComments((prev) => prev.map((x) => x.id === c.id ? { ...x, isApproved: true } : x));
   }
 
   async function handleDelete(c: Comment) {
     if (!confirm("Delete this comment?")) return;
-    await deleteComment(c.id);
+    await fetch(`/api/comments/${c.id}`, { method: "DELETE" });
     setComments((prev) => prev.filter((x) => x.id !== c.id));
   }
 

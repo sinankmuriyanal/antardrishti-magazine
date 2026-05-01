@@ -2,7 +2,7 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ArticleForm } from "@/components/admin/ArticleForm";
-import { createArticle } from "@/lib/articles";
+import { adminCreateArticle as createArticle } from "@/lib/articles-admin";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Article } from "@/types";

@@ -2,8 +2,7 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { adminFetchArticles, adminUpdateArticle, adminDeleteArticle } from "@/lib/articles-admin";
 import { SECTIONS_DATA } from "@/lib/sections";
 import type { Article } from "@/types";
 
@@ -32,17 +31,10 @@ export default function ArticlesAdmin() {
     setLoading(true);
     setError("");
     try {
-      // Single collection fetch — no composite index needed; sort client-side
-      const snap = await getDocs(collection(db, "articles"));
-      const all = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Article));
-      // Sort by section number then article number client-side
-      all.sort((a, b) => a.sectionNumber - b.sectionNumber || a.articleNumber - b.articleNumber);
+      const all = await adminFetchArticles();
       setArticles(all);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg.includes("index") || msg.includes("permission")
-        ? "Firestore index or permission error. Make sure Firebase is configured and the articles collection exists."
-        : `Failed to load articles: ${msg}`);
+      setError(e instanceof Error ? e.message : String(e));
       setArticles([]);
     }
     setLoading(false);
@@ -51,18 +43,18 @@ export default function ArticlesAdmin() {
   useEffect(() => { load(); }, []);
 
   async function togglePublish(article: Article) {
-    await updateDoc(doc(db, "articles", article.id), { isPublished: !article.isPublished });
+    await adminUpdateArticle(article.id, { isPublished: !article.isPublished });
     setArticles((prev) => prev.map((a) => a.id === article.id ? { ...a, isPublished: !a.isPublished } : a));
   }
 
   async function toggleEditorsPick(article: Article) {
-    await updateDoc(doc(db, "articles", article.id), { isEditorsPick: !article.isEditorsPick });
+    await adminUpdateArticle(article.id, { isEditorsPick: !article.isEditorsPick });
     setArticles((prev) => prev.map((a) => a.id === article.id ? { ...a, isEditorsPick: !a.isEditorsPick } : a));
   }
 
   async function handleDelete(article: Article) {
     if (!confirm(`Delete "${article.title}"?\n\nThis cannot be undone.`)) return;
-    await deleteDoc(doc(db, "articles", article.id));
+    await adminDeleteArticle(article.id);
     setArticles((prev) => prev.filter((a) => a.id !== article.id));
   }
 

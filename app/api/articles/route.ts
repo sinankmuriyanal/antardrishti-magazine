@@ -30,12 +30,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const ref = await adminDb.collection("articles").add({
+    const id = body.displayId as string;
+    if (!id) return NextResponse.json({ error: "displayId is required" }, { status: 400 });
+    await adminDb.collection("articles").doc(id).set({
       ...body,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
-    return NextResponse.json({ id: ref.id }, { status: 201 });
+    return NextResponse.json({ id }, { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

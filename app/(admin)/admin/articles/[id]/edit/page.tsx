@@ -2,7 +2,7 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ArticleForm } from "@/components/admin/ArticleForm";
-import { fetchArticleById, updateArticle } from "@/lib/articles";
+import { adminFetchArticleById as fetchArticleById, adminUpdateArticle as updateArticle } from "@/lib/articles-admin";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import type { Article } from "@/types";

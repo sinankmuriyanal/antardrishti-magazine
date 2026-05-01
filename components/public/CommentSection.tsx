@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchApprovedComments, submitComment } from "@/lib/comments";
 import type { Comment } from "@/types";
-
 interface Props { articleId: string }
 
 function formatDate(ts: { seconds: number } | null) {
@@ -34,8 +32,9 @@ export function CommentSection({ articleId }: Props) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   useEffect(() => {
-    fetchApprovedComments(articleId)
-      .then(setComments)
+    fetch(`/api/comments?articleId=${encodeURIComponent(articleId)}`)
+      .then((r) => r.json())
+      .then((data) => setComments(data as Comment[]))
       .catch(() => {});
   }, [articleId]);
 
@@ -44,7 +43,12 @@ export function CommentSection({ articleId }: Props) {
     if (!name.trim() || !content.trim()) return;
     setStatus("sending");
     try {
-      await submitComment({ articleId, authorName: name, authorEmail: email, content });
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ articleId, authorName: name, authorEmail: email, content }),
+      });
+      if (!res.ok) throw new Error("Failed");
       setStatus("sent");
       setName(""); setEmail(""); setContent("");
     } catch {
