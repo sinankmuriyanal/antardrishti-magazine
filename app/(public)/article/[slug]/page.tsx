@@ -4,9 +4,17 @@ import { getSectionByNumber } from "@/lib/sections";
 import { CommentSection } from "@/components/public/CommentSection";
 import type { Metadata } from "next";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 const FALLBACK = "/assets/images/common/img-fallback.png";
+
+function sanitizeContentHtml(html: string): string {
+  return html
+    .replace(/\s+data-uc-lightbox(?:="[^"]*")?/g, "")
+    .replace(/\s+data-uc-img(?:="[^"]*")?/g, "")
+    .replace(/\s+data-uc-svg(?:="[^"]*")?/g, "")
+    .replace(/\s+data-src="assets\//g, ' data-src="/assets/');
+}
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -206,6 +214,7 @@ export default async function ArticlePage({ params }: Props) {
             <img
               src={coverImg}
               alt={article.title}
+              loading="eager"
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           </div>
@@ -221,7 +230,7 @@ export default async function ArticlePage({ params }: Props) {
 
             <div
               className="post-content panel"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeContentHtml(article.content) }}
             />
 
             {/* Tags */}
