@@ -176,7 +176,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* Featured image — inside dark block so it sits on the ink bg */}
         <div className="container max-w-xl" style={{ paddingBottom: "2.5rem" }}>
-          <div style={{ borderRadius: "14px", overflow: "hidden", aspectRatio: "16/9", maxHeight: 520 }}>
+          <div style={{ borderRadius: "14px", overflow: "hidden", aspectRatio: "16/9", maxHeight: 520, width: "100%" }}>
             <img
               src={coverImg}
               alt={article.title}
