@@ -43,11 +43,12 @@ function SectionChip({ name, href }: { name: string; href: string }) {
   );
 }
 
-/** Small author circle + name + reading time — white text, for dark overlays */
+/** Small author circle + name — white text, for dark overlays. Reading time is a separate pill. */
 function AuthorMetaDark({ article }: { article: Article }) {
   const img = absoluteImgUrl(article.authorImage);
+  if (!img && !article.authorName) return null;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
       {img && (
         <img
           src={img}
@@ -56,19 +57,36 @@ function AuthorMetaDark({ article }: { article: Article }) {
         />
       )}
       {article.authorName && (
-        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
           {article.authorName}
         </span>
       )}
-      {article.readingTime && (
-        <>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem" }}>·</span>
-          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "rgba(255,255,255,0.5)" }}>
-            {article.readingTime} min read
-          </span>
-        </>
-      )}
     </div>
+  );
+}
+
+/** Pill badge showing reading time — top-right of image */
+function ReadingTimePill({ minutes }: { minutes?: number }) {
+  if (!minutes) return null;
+  return (
+    <span style={{
+      position: "absolute",
+      top: "10px",
+      right: "10px",
+      zIndex: 2,
+      fontFamily: "var(--font-body)",
+      fontSize: "0.6rem",
+      fontWeight: 700,
+      letterSpacing: "0.05em",
+      color: "white",
+      background: "rgba(10,14,20,0.62)",
+      backdropFilter: "blur(4px)",
+      padding: "3px 8px",
+      borderRadius: "100px",
+      border: "1px solid rgba(255,255,255,0.15)",
+    }}>
+      {minutes} min read
+    </span>
   );
 }
 
@@ -77,12 +95,12 @@ function AuthorMetaLight({ article }: { article: Article }) {
   const img = absoluteImgUrl(article.authorImage);
   const date = formatDate(article.publishedAt);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
       {img && (
         <img
           src={img}
           alt=""
-          style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", border: "1.5px solid var(--color-border)", flexShrink: 0 }}
+          style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", border: "1.5px solid var(--color-border)", flexShrink: 0 }}
         />
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -93,14 +111,14 @@ function AuthorMetaLight({ article }: { article: Article }) {
         )}
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           {date && (
-            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--color-muted)" }}>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.67rem", color: "var(--color-muted)" }}>
               {date}
             </span>
           )}
           {article.readingTime && (
             <>
-              <span style={{ color: "var(--color-muted)", fontSize: "0.65rem" }}>·</span>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--color-muted)" }}>
+              {date && <span style={{ color: "var(--color-muted)", fontSize: "0.65rem" }}>·</span>}
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.67rem", color: "var(--color-muted)" }}>
                 {article.readingTime} min read
               </span>
             </>
@@ -129,6 +147,7 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.96) 0%, rgba(10,14,20,0.6) 40%, rgba(10,14,20,0.1) 80%, transparent 100%)",
         }} />
+        <ReadingTimePill minutes={article.readingTime} />
         <div className="position-absolute top-0 start-0 end-0 z-1" style={{ padding: "1.25rem 1.5rem 0", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <span style={{
             fontFamily: "var(--font-body)",
@@ -157,7 +176,7 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
               lineHeight: 1.2,
               letterSpacing: "-0.02em",
               maxWidth: 540,
-              marginBottom: "0.85rem",
+              marginBottom: "1rem",
             }}
           >
             <a
@@ -194,6 +213,7 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.94) 0%, rgba(10,14,20,0.3) 55%, transparent 100%)",
         }} />
+        <ReadingTimePill minutes={article.readingTime} />
         <div className="position-absolute bottom-0 start-0 end-0 p-3 z-1">
           <div style={{ marginBottom: "0.4rem" }}>
             <a href={sectionHref(section)} className="text-none">
@@ -221,7 +241,7 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
               WebkitLineClamp: 3,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              marginBottom: "0.5rem",
+              marginBottom: "0.65rem",
             }}
           >
             <a className="text-none text-white" href={articleHref(article)}>{article.title}</a>
@@ -252,6 +272,7 @@ export function MiniOverlayCard({ article, section }: { article: Article; sectio
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.95) 0%, rgba(10,14,20,0.3) 55%, transparent 100%)",
         }} />
+        <ReadingTimePill minutes={article.readingTime} />
         <div className="position-absolute bottom-0 start-0 end-0 p-3 z-1">
           <a href={sectionHref(section)} className="text-none" style={{ display: "inline-block", marginBottom: "4px" }}>
             <span style={{
@@ -277,7 +298,7 @@ export function MiniOverlayCard({ article, section }: { article: Article; sectio
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              marginBottom: "0.45rem",
+              marginBottom: "0.55rem",
             }}
           >
             <a className="text-none text-white" href={articleHref(article)}>{article.title}</a>

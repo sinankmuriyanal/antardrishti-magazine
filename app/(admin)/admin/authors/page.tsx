@@ -3,8 +3,6 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState, useRef } from "react";
 import { slugify } from "@/lib/utils";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
 import type { Author } from "@/types";
 
 const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white";
@@ -65,12 +63,16 @@ export default function AuthorsAdmin() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setError("");
     try {
-      const r = storageRef(storage, `authors/uploads/${Date.now()}-${file.name}`);
-      await uploadBytes(r, file);
-      const url = await getDownloadURL(r);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("path", `authors/uploads/${Date.now()}-${file.name}`);
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      if (!res.ok) throw new Error(await res.text());
+      const { url } = await res.json();
       setField("photo", url);
-    } catch { setError("Photo upload failed."); }
+    } catch (err) { setError(`Photo upload failed: ${err}`); }
     setUploading(false);
   }
 
@@ -125,37 +127,61 @@ export default function AuthorsAdmin() {
         authorName?: string; authorBio?: string; authorImage?: string; authorLinkedIn?: string;
       }[];
 
-      const seen = new Set(authors.map((a) => a.slug));
+      // Build slug → existing author map
+      const existingBySlug = new Map(authors.map((a) => [a.slug, a]));
+      // Deduplicate articles by author slug, keeping the one with a photo
       const bySlug = new Map<string, { name: string; bio: string; photo: string; linkedin: string; slug: string }>();
-
       for (const a of articles) {
         if (!a.authorName?.trim()) continue;
         const slug = slugify(a.authorName.trim());
-        if (!slug || seen.has(slug) || bySlug.has(slug)) continue;
-        bySlug.set(slug, {
-          name: a.authorName.trim(),
-          bio: a.authorBio ?? "",
-          photo: a.authorImage ?? "",
-          linkedin: a.authorLinkedIn ?? "",
-          slug,
-        });
+        if (!slug) continue;
+        const existing = bySlug.get(slug);
+        if (!existing || (!existing.photo && a.authorImage)) {
+          bySlug.set(slug, {
+            name: a.authorName.trim(),
+            bio: a.authorBio ?? "",
+            photo: a.authorImage ?? "",
+            linkedin: a.authorLinkedIn ?? "",
+            slug,
+          });
+        }
       }
 
-      if (bySlug.size === 0) {
-        setError("All authors from articles are already in the list.");
+      const toCreate: typeof bySlug extends Map<string, infer V> ? V[] : never[] = [];
+      const toUpdate: { id: string; photo: string }[] = [];
+
+      for (const [slug, data] of bySlug) {
+        const existing = existingBySlug.get(slug);
+        if (!existing) {
+          toCreate.push(data);
+        } else if (!existing.photo && data.photo) {
+          // Update photo for existing authors who are missing one
+          toUpdate.push({ id: existing.id, photo: data.photo });
+        }
+      }
+
+      if (toCreate.length === 0 && toUpdate.length === 0) {
+        setError("All authors are already up to date.");
         setSyncing(false);
         return;
       }
 
-      await Promise.all(
-        [...bySlug.values()].map((author) =>
+      await Promise.all([
+        ...toCreate.map((author) =>
           fetch("/api/authors", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(author),
           })
-        )
-      );
+        ),
+        ...toUpdate.map(({ id, photo }) =>
+          fetch(`/api/authors/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ photo }),
+          })
+        ),
+      ]);
       await load();
     } catch (e) { setError(String(e)); }
     setSyncing(false);

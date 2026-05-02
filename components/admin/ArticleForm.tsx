@@ -5,8 +5,6 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import ImageExtension from "@tiptap/extension-image";
 import LinkExtension from "@tiptap/extension-link";
-import { storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { SECTIONS_DATA } from "@/lib/sections";
 import { slugify, calcReadingTime } from "@/lib/utils";
 import type { Article } from "@/types";
@@ -115,19 +113,24 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
   });
 
   async function uploadImage(file: File, path: string): Promise<string> {
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
-    return getDownloadURL(storageRef);
+    const form = new FormData();
+    form.append("file", file);
+    form.append("path", path);
+    const res = await fetch("/api/upload", { method: "POST", body: form });
+    if (!res.ok) throw new Error(await res.text());
+    const { url } = await res.json();
+    return url;
   }
 
   async function handleFeaturedUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingFeatured(true);
+    setError("");
     try {
       const url = await uploadImage(file, `articles/uploads/featured-${Date.now()}-${file.name}`);
       setFeaturedImage(url);
-    } catch { setError("Failed to upload featured image."); }
+    } catch (err) { setError(`Featured image upload failed: ${err}`); }
     setUploadingFeatured(false);
   }
 
@@ -135,10 +138,11 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
     setUploadingInline(true);
+    setError("");
     try {
       const url = await uploadImage(file, `articles/uploads/inline-${Date.now()}-${file.name}`);
       editor.chain().focus().setImage({ src: url }).run();
-    } catch { setError("Failed to upload image."); }
+    } catch (err) { setError(`Inline image upload failed: ${err}`); }
     setUploadingInline(false);
     if (inlineImageRef.current) inlineImageRef.current.value = "";
   }, [editor]);
@@ -147,10 +151,11 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingAuthor(true);
+    setError("");
     try {
       const url = await uploadImage(file, `articles/uploads/author-${Date.now()}-${file.name}`);
       setAuthorImage(url);
-    } catch { setError("Failed to upload author photo."); }
+    } catch (err) { setError(`Author photo upload failed: ${err}`); }
     setUploadingAuthor(false);
   }
 
