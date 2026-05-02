@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { href: "/section/social",           label: "Social" },
   { href: "/section/campus-chronicles",label: "Campus Chronicles" },
   { href: "/about-us",                 label: "About Us" },
-  { href: "/team",                     label: "Team" },
+  // Team hidden until populated — { href: "/team", label: "Team" },
 ];
 
 const SOCIAL_LINKS = [

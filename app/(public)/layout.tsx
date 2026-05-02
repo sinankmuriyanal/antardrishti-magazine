@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { href: "/section/social", label: "Social" },
   { href: "/section/campus-chronicles", label: "Campus Chronicles" },
   { href: "/about-us", label: "About Us" },
+  // Team page hidden until populated — { href: "/team", label: "Team" },
 ];
 
 const SOCIAL_LINKS = [
