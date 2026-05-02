@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { getSectionBySlug } from "@/lib/sections";
-import { SectionFeaturedCard, OverlayCard } from "@/components/public/ArticleCard";
+import { SectionFeaturedCard, HorizontalCard } from "@/components/public/ArticleCard";
 import type { Metadata } from "next";
 import type { Article } from "@/types";
 
@@ -181,7 +181,7 @@ export default async function SectionPage({ params }: Props) {
                   <div className="row child-cols-12 md:child-cols-6 lg:child-cols-4 g-4">
                     {rest.map((a) => (
                       <div key={a.id}>
-                        <OverlayCard article={a} section={section} ratio="ratio-4x3" />
+                        <HorizontalCard article={a} section={section} />
                       </div>
                     ))}
                   </div>

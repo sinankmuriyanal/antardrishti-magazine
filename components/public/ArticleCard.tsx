@@ -473,6 +473,147 @@ export function SectionFeaturedCard({ article, section }: { article: Article; se
   );
 }
 
+/* ── HorizontalCard — image left, text right (section grid style) ──────── */
+export function HorizontalCard({ article, section }: { article: Article; section: Section }) {
+  const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
+  return (
+    <article
+      className="post type-post panel uc-transition-toggle"
+      style={{
+        display: "flex",
+        gap: 0,
+        background: "white",
+        borderRadius: 10,
+        overflow: "hidden",
+        border: "1px solid var(--color-border, #E2DDD8)",
+        boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
+        transition: "box-shadow 0.25s ease, transform 0.25s ease",
+        height: "100%",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)";
+        (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.05)";
+        (e.currentTarget as HTMLElement).style.transform = "none";
+      }}
+    >
+      {/* Image — left column */}
+      <a
+        href={articleHref(article)}
+        style={{
+          flexShrink: 0,
+          width: "38%",
+          position: "relative",
+          overflow: "hidden",
+          display: "block",
+        }}
+      >
+        <img
+          src={img}
+          alt={article.title}
+          className="uc-transition-scale-up"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            minHeight: 140,
+          }}
+        />
+        {/* Reading time pill on image */}
+        {article.readingTime && (
+          <span style={{
+            position: "absolute", bottom: 8, left: 8,
+            fontFamily: "var(--font-body)", fontSize: "0.58rem", fontWeight: 700,
+            color: "white", background: "rgba(10,14,20,0.6)", backdropFilter: "blur(4px)",
+            padding: "2px 7px", borderRadius: 100,
+            border: "1px solid rgba(255,255,255,0.15)",
+          }}>
+            {article.readingTime} min
+          </span>
+        )}
+      </a>
+
+      {/* Text — right column */}
+      <div style={{
+        flex: 1,
+        padding: "1rem 1.1rem",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.4rem",
+        minWidth: 0,
+      }}>
+        {/* Section label */}
+        <a
+          href={sectionHref(section)}
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "0.55rem",
+            fontWeight: 700,
+            letterSpacing: "0.13em",
+            textTransform: "uppercase",
+            color: "var(--color-primary)",
+            textDecoration: "none",
+          }}
+        >
+          {section.name}
+        </a>
+
+        {/* Title */}
+        <h3 style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "0.9rem",
+          fontWeight: 700,
+          lineHeight: 1.32,
+          letterSpacing: "-0.01em",
+          color: "var(--color-text, #111318)",
+          margin: 0,
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          flex: 1,
+        }}>
+          <a
+            href={articleHref(article)}
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
+            {article.title}
+          </a>
+        </h3>
+
+        {/* Author row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: "auto", paddingTop: "0.5rem" }}>
+          {absoluteImgUrl(article.authorImage) && (
+            <img
+              src={absoluteImgUrl(article.authorImage)!}
+              alt=""
+              style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", border: "1.5px solid var(--color-border)", flexShrink: 0 }}
+            />
+          )}
+          {article.authorName && (
+            <span style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "0.68rem",
+              fontWeight: 600,
+              color: "var(--color-muted)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}>
+              {article.authorName}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <a href={articleHref(article)} className="position-cover" aria-label={article.title} />
+    </article>
+  );
+}
+
 /* ── Legacy aliases ─────────────────────────────────────────────────────── */
 export function HeroArticleCard2({ article, section }: { article: Article; section: Section }) {
   return <HeroArticleCard article={article} section={section} />;

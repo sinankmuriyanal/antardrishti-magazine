@@ -1,6 +1,6 @@
 import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { SECTIONS_DATA, getSectionByNumber } from "@/lib/sections";
-import { HeroArticleCard, MiniOverlayCard, OverlayCard } from "@/components/public/ArticleCard";
+import { HeroArticleCard, MiniOverlayCard, HorizontalCard } from "@/components/public/ArticleCard";
 import type { Article } from "@/types";
 
 export const revalidate = 3600;
@@ -139,11 +139,11 @@ export default async function HomePage() {
               </a>
             </div>
 
-            {/* Cards grid */}
-            <div className="row child-cols-12 md:child-cols-4 g-4">
+            {/* Cards grid — horizontal style */}
+            <div className="row child-cols-12 md:child-cols-6 lg:child-cols-4 g-4">
               {sArticles.map((a) => (
                 <div key={a.id}>
-                  <OverlayCard article={a} section={section} ratio="ratio-4x3" />
+                  <HorizontalCard article={a} section={section} />
                 </div>
               ))}
             </div>
