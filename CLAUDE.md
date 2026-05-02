@@ -179,3 +179,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-02] update: (admin)/admin/articles/page.tsx,(admin)/admin/page.tsx,(admin)/admin/team/page.tsx,(public)/article/[slug]/page.tsx,(public)/layout.tsx,(public)/team/page.tsx
 - [2026-05-02] update: (public)/layout.tsx,public/NavClient.tsx
 - [2026-05-02] update: (admin)/admin/page.tsx
+- [2026-05-02] update: (public)/page.tsx,(public)/section/[slug]/page.tsx,add_vercel_env.js,bust_image_cache.js,check_all_urls.js,check_content_images.js

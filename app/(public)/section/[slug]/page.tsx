@@ -23,7 +23,17 @@ export default async function SectionPage({ params }: Props) {
 
   let articles: Article[] = [];
   try {
-    articles = await fetchArticles({ sectionNumber: section.number, published: true });
+    const raw = await fetchArticles({ sectionNumber: section.number, published: true });
+    // Edition 2 first, then newest publishedAt first
+    articles = raw.sort((a, b) => {
+      const edDiff = (b.edition ?? 1) - (a.edition ?? 1);
+      if (edDiff !== 0) return edDiff;
+      const ta = (b.publishedAt as { _seconds?: number; seconds?: number })?._seconds
+        ?? (b.publishedAt as { _seconds?: number; seconds?: number })?.seconds ?? 0;
+      const tb = (a.publishedAt as { _seconds?: number; seconds?: number })?._seconds
+        ?? (a.publishedAt as { _seconds?: number; seconds?: number })?.seconds ?? 0;
+      return ta - tb;
+    });
   } catch { /* DB not configured */ }
 
   const [featured, ...rest] = articles;

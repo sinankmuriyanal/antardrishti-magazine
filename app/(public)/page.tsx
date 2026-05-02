@@ -16,10 +16,22 @@ export default async function HomePage() {
   const featured = articles[0];
   const heroSidebar = articles.slice(1, 4);
 
-  const sectionGroups = SECTIONS_DATA.map((sec) => ({
-    section: sec,
-    articles: articles.filter((a) => a.sectionNumber === sec.number).slice(0, 3),
-  })).filter((g) => g.articles.length > 0);
+  // Per-section: Edition 2 first, then by publishedAt desc, show up to 3
+  const sectionGroups = SECTIONS_DATA.map((sec) => {
+    const sectionArticles = articles
+      .filter((a) => a.sectionNumber === sec.number)
+      .sort((a, b) => {
+        const edDiff = (b.edition ?? 1) - (a.edition ?? 1);
+        if (edDiff !== 0) return edDiff;
+        const ta = (b.publishedAt as { _seconds?: number; seconds?: number })?._seconds
+          ?? (b.publishedAt as { _seconds?: number; seconds?: number })?.seconds ?? 0;
+        const tb = (a.publishedAt as { _seconds?: number; seconds?: number })?._seconds
+          ?? (a.publishedAt as { _seconds?: number; seconds?: number })?.seconds ?? 0;
+        return ta - tb;
+      })
+      .slice(0, 3);
+    return { section: sec, articles: sectionArticles };
+  }).filter((g) => g.articles.length > 0);
 
   return (
     <>

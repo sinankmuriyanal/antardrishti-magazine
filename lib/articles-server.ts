@@ -5,12 +5,24 @@
 import { adminDb } from "./firebase-admin";
 import type { Article } from "@/types";
 
+function ts(t: unknown): number {
+  if (!t) return 0;
+  const x = t as { seconds?: number; _seconds?: number };
+  return x.seconds ?? x._seconds ?? 0;
+}
+
 function sortArticles(articles: Article[]): Article[] {
-  return articles.sort((a, b) =>
-    a.sectionNumber !== b.sectionNumber
-      ? a.sectionNumber - b.sectionNumber
-      : a.articleNumber - b.articleNumber
-  );
+  return articles.sort((a, b) => {
+    // Edition 2 before Edition 1
+    const edDiff = (b.edition ?? 1) - (a.edition ?? 1);
+    if (edDiff !== 0) return edDiff;
+    // Within same edition: newest publishedAt first
+    const tDiff = ts(b.publishedAt) - ts(a.publishedAt);
+    if (tDiff !== 0) return tDiff;
+    // Stable fallback: section asc, article desc
+    if (a.sectionNumber !== b.sectionNumber) return a.sectionNumber - b.sectionNumber;
+    return b.articleNumber - a.articleNumber;
+  });
 }
 
 export async function fetchArticlesServer(opts?: {
