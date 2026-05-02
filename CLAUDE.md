@@ -168,3 +168,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-01] fix: ensure all image URLs are absolute — prevent relative paths resolving to /article/assets/... on non-root routes
 - [2026-05-01] update: extract_docx.py,upload_all_images.js
 - [2026-05-02] update: debug_images.py,dump_headers.py,extract_docx.py,fix_firestore.js
+- [2026-05-02] update: check_content_images.js,check_firestore_images.js,extract_docx.py,fix_firestore.js
