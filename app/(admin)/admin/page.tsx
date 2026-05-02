@@ -200,7 +200,6 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-        </div>
 
         {/* KPI row 2 — health */}
         <div>
