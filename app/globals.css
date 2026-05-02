@@ -642,4 +642,16 @@ article:hover .uc-transition-scale-up {
   .post-content p { font-size: 0.97rem; line-height: 1.8; }
   .post-content h2 { font-size: 1.4rem; }
   .post-content blockquote { font-size: 1.05rem; padding: 1rem 1.25rem; }
+
+  /* Article header featured image — shorter on mobile, landscape preserved */
+  .article-featured-image-wrap {
+    aspect-ratio: 16 / 9 !important;
+    max-height: 240px !important;
+  }
+
+  /* Hero card on mobile */
+  .post.type-post.panel { min-height: 260px !important; }
+
+  /* Section page hero shorter on mobile */
+  .section-page-hero { padding-top: 2.5rem !important; padding-bottom: 2rem !important; }
 }

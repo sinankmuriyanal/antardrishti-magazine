@@ -52,6 +52,14 @@ export default async function ArticlePage({ params }: Props) {
 
   if (!article) notFound();
 
+  // Track view (fire-and-forget — never blocks render)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://antardrishti-magazine.vercel.app";
+  fetch(`${baseUrl}/api/views`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ articleId: article.id ?? article.displayId }),
+  }).catch(() => {});
+
   const section = getSectionByNumber(article.sectionNumber);
 
   const ts = article.publishedAt as unknown as { seconds?: number; _seconds?: number } | null;
@@ -60,7 +68,7 @@ export default async function ArticlePage({ params }: Props) {
     ? new Date(epochMs).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : "";
 
-  const shareUrl = `/article/${article.slug || article.displayId}`;
+  const shareUrl = `https://antardrishti-magazine.vercel.app/article/${article.slug || article.displayId}`;
 
   const coverImg = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   const authorImgUrl = absoluteImgUrl(article.authorImage);
@@ -176,7 +184,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* Featured image — inside dark block so it sits on the ink bg */}
         <div className="container max-w-xl" style={{ paddingBottom: "2.5rem" }}>
-          <div style={{ borderRadius: "14px", overflow: "hidden", aspectRatio: "16/9", maxHeight: 520, width: "100%" }}>
+          <div className="article-featured-image-wrap" style={{ borderRadius: "14px", overflow: "hidden", aspectRatio: "16/9", maxHeight: 520, width: "100%" }}>
             <img
               src={coverImg}
               alt={article.title}

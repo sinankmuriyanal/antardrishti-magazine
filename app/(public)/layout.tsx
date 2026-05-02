@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { MobileNav, SearchOverlay, ThemeToggle } from "@/components/public/NavClient";
 
 export const metadata: Metadata = {
   title: { default: "Antardrishti", template: "%s | Antardrishti" },
@@ -35,108 +36,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
       <div className="uni-body panel bg-white text-gray-900 dark:bg-black dark:text-gray-200 overflow-x-hidden">
 
-        {/* ── Search Modal ── */}
-        <div id="uc-search-modal" className="uc-modal-full uc-modal" data-uc-modal="overlay: true">
-          <div className="uc-modal-dialog d-flex justify-center bg-white text-dark dark:bg-gray-900 dark:text-white" data-uc-height-viewport="">
-            <button
-              className="uc-modal-close-default p-0 icon-3 btn border-0 dark:text-white dark:text-opacity-50 hover:text-primary hover:rotate-90 duration-150 transition-all"
-              type="button"
-            >
-              <i className="unicon-close"></i>
-            </button>
-            <div className="panel w-100 sm:w-500px px-2 py-10">
-              <h3 className="h2 text-center" style={{ fontFamily: "var(--font-display)" }}>Search Articles</h3>
-              <p className="text-center opacity-50 fs-6 mt-1 mb-5" style={{ fontFamily: "var(--font-body)" }}>
-                Find articles across all sections
-              </p>
-              <form className="hstack gap-1 border-bottom p-narrow dark:border-gray-700" action="/all-articles">
-                <span className="d-inline-flex justify-center items-center w-40px h-40px opacity-40">
-                  <i className="unicon-search icon-3"></i>
-                </span>
-                <input
-                  type="search"
-                  name="q"
-                  className="form-control-plaintext ms-1 fs-5 w-full dark:text-white"
-                  style={{ fontFamily: "var(--font-body)", fontWeight: 400 }}
-                  placeholder="Search by keyword…"
-                  aria-label="Search"
-                  autoFocus
-                />
-              </form>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Mobile Menu ── */}
-        <div id="uc-menu-panel" data-uc-offcanvas="overlay: true;">
-          <div className="uc-offcanvas-bar bg-white text-dark dark:bg-gray-900 dark:text-white">
-            <header className="uc-offcanvas-header hstack justify-between items-center pb-4 bg-white dark:bg-gray-900">
-              <div className="uc-logo">
-                <a href="/" className="text-none text-gray-900 dark:text-white">
-                  <img
-                    className="w-32px"
-                    src="/assets/images/common/White Logo.png"
-                    alt="Antardrishti"
-                    data-uc-svg
-                    style={{ height: 38, width: "auto" }}
-                  />
-                </a>
-              </div>
-              <button
-                className="uc-offcanvas-close p-0 icon-3 btn border-0 dark:text-white dark:text-opacity-50 hover:text-primary hover:rotate-90 duration-150 transition-all"
-                type="button"
-              >
-                <i className="unicon-close"></i>
-              </button>
-            </header>
-            <div className="panel">
-              <ul className="nav-y gap-2 fw-medium fs-5" data-uc-nav>
-                <li><a href="/" style={{ fontFamily: "var(--font-body)" }}>Home</a></li>
-                {NAV_LINKS.map((l) => (
-                  <li key={l.href}>
-                    <a href={l.href} style={{ fontFamily: "var(--font-body)" }}>{l.label}</a>
-                  </li>
-                ))}
-              </ul>
-              <div style={{ height: 1, background: "var(--color-border, #E2DDD8)", margin: "1.25rem 0" }} />
-              <ul className="nav-x gap-2">
-                {SOCIAL_LINKS.map((s) => (
-                  <li key={s.href}>
-                    <a
-                      href={s.href}
-                      target={s.href.startsWith("http") ? "_blank" : undefined}
-                      rel={s.href.startsWith("http") ? "noreferrer" : undefined}
-                      className="w-36px h-36px cstack border rounded-circle hover:bg-primary hover:border-primary hover:text-white transition-all duration-200"
-                      aria-label={s.label}
-                    >
-                      <i className={`${s.icon} icon-2`}></i>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-              <div
-                className="py-2 hstack gap-2 mt-4"
-                data-uc-sticky="position: bottom"
-                style={{ background: "inherit" }}
-              >
-                <div className="vstack gap-1">
-                  <span
-                    className="opacity-50"
-                    style={{ fontSize: "0.68rem", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-body)", fontWeight: 600 }}
-                  >
-                    Theme
-                  </span>
-                  <div className="darkmode-trigger" data-darkmode-switch="">
-                    <label className="switch">
-                      <input type="checkbox" />
-                      <span className="slider fs-5"></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ── Search + Mobile nav (React-controlled, no UIKit JS dependency) ── */}
 
         {/* ── Favourites Modal ── */}
         <div id="uc-favorites-modal" data-uc-modal="overlay: true">
@@ -162,16 +62,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
         {/* ── Back to top + dark mode toggle ── */}
         <div className="backtotop-wrap position-fixed bottom-0 end-0 z-99 m-2 vstack gap-1">
-          <div
-            className="darkmode-trigger cstack w-40px h-40px rounded-circle text-none bg-gray-100 dark:bg-gray-700 dark:text-white"
-            data-darkmode-toggle=""
-          >
-            <label className="switch">
-              <span className="sr-only">Toggle dark mode</span>
-              <input type="checkbox" />
-              <span className="slider fs-5"></span>
-            </label>
-          </div>
+          <ThemeToggle className="cstack w-40px h-40px rounded-circle text-none bg-gray-100 dark:bg-gray-700 dark:text-white" />
           <a
             className="btn btn-sm bg-primary text-white w-40px h-40px rounded-circle"
             href="to_top"
@@ -238,9 +129,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   data-uc-navbar=" animation: uc-animation-slide-top-small; duration: 150;"
                 >
                   <div className="uc-navbar-left gap-4">
-                    {/* Hamburger (mobile) */}
+                    {/* Hamburger (mobile) — React-controlled */}
                     <div className="d-block lg:d-none">
-                      <a className="uc-menu-trigger" href="#uc-menu-panel" data-uc-toggle></a>
+                      <MobileNav />
                     </div>
                     {/* Logo (desktop) */}
                     <div className="uc-logo d-none md:d-block">
@@ -280,25 +171,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     </div>
                   </div>
 
-                  {/* Right actions */}
+                  {/* Right actions — React-controlled */}
                   <div className="uc-navbar-right gap-1">
-                    <a
-                      href="#uc-search-modal"
-                      className="btn border-0 p-0 w-36px h-36px cstack text-dark dark:text-white hover:text-primary transition-colors duration-200"
-                      data-uc-toggle
-                      aria-label="Search"
-                    >
-                      <i className="unicon-search icon-2"></i>
-                    </a>
-                    <div className="uc-navbar-item">
-                      <div className="uc-modes-trigger icon-2 text-dark dark:text-white ms-1" data-darkmode-toggle="">
-                        <label className="switch">
-                          <span className="sr-only">Toggle dark mode</span>
-                          <input type="checkbox" />
-                          <span className="slider"></span>
-                        </label>
-                      </div>
-                    </div>
+                    <SearchOverlay />
+                    <ThemeToggle className="btn border-0 p-0 w-36px h-36px cstack text-dark dark:text-white hover:text-primary transition-colors duration-200 ms-1" />
                   </div>
                 </div>
               </div>

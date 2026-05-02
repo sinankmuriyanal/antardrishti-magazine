@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { SECTIONS_DATA } from "@/lib/sections";
 import type { Article } from "@/types";
 
+interface ViewEntry { id: string; title: string; displayId: string; totalViews: number; sectionNumber: number; }
+interface TrendEntry { date: string; views: number; }
+
 interface DashStats {
   total: number;
   published: number;
@@ -13,14 +16,19 @@ interface DashStats {
   pendingComments: number;
   missingCover: number;
   missingAuthorPhoto: number;
+  totalViews: number;
   sectionCoverage: { name: string; count: number; slug: string }[];
   recentArticles: { id: string; title: string; displayId: string; slug?: string; sectionName: string; isPublished: boolean; authorName?: string }[];
   missingArticles: { id: string; title: string; displayId: string; slug?: string; missingCover: boolean; missingPhoto: boolean }[];
+  topArticles: ViewEntry[];
+  viewTrend: TrendEntry[];
 }
 
 const EMPTY: DashStats = {
   total: 0, published: 0, drafts: 0, editorsPicks: 0, pendingComments: 0,
-  missingCover: 0, missingAuthorPhoto: 0, sectionCoverage: [], recentArticles: [], missingArticles: [],
+  missingCover: 0, missingAuthorPhoto: 0, totalViews: 0,
+  sectionCoverage: [], recentArticles: [], missingArticles: [],
+  topArticles: [], viewTrend: [],
 };
 
 function KPICard({ label, value, sub, href, accent = "#e8521d", loading }: {
@@ -44,9 +52,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [articles, allComments] = await Promise.all([
+        const [articles, allComments, viewsData] = await Promise.all([
           fetch("/api/articles").then((r) => r.json() as Promise<Article[]>),
           fetch("/api/comments").then((r) => r.json() as Promise<{ isApproved: boolean }[]>),
+          fetch("/api/views?days=30").then((r) => r.json() as Promise<{ topArticles: ViewEntry[]; trend: TrendEntry[] }>).catch(() => ({ topArticles: [], trend: [] })),
         ]);
 
         const sectionMap: Record<number, string> = {};
@@ -82,6 +91,9 @@ export default function AdminDashboard() {
           pendingComments: allComments.filter((c) => !c.isApproved).length,
           missingCover: articles.filter((a) => !a.featuredImage).length,
           missingAuthorPhoto: articles.filter((a) => !a.authorImage).length,
+          totalViews: viewsData.topArticles.reduce((s, a) => s + a.totalViews, 0),
+          topArticles: viewsData.topArticles,
+          viewTrend: viewsData.trend,
           sectionCoverage: SECTIONS_DATA.map((s) => ({
             name: s.name, count: sectionCount[s.number] ?? 0, slug: s.slug,
           })),
@@ -129,6 +141,65 @@ export default function AdminDashboard() {
             <KPICard label="Editor's picks" value={stats.editorsPicks} sub="featured articles" href="/admin/articles" accent="#f59e0b" loading={loading} />
             <KPICard label="Drafts" value={stats.drafts} sub="not yet published" href="/admin/articles" accent="#6b7280" loading={loading} />
           </div>
+        </div>
+
+        {/* Views KPIs */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Readership (last 30 days)</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Total views KPI */}
+            <KPICard label="Total views" value={stats.totalViews.toLocaleString()} sub="across all articles" href="/admin/articles" accent="#3b82f6" loading={loading} />
+
+            {/* Top articles */}
+            <div className="bg-white rounded-xl border p-5 col-span-1 lg:col-span-2" style={{ borderColor: "#f0ece8" }}>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Top Articles by Views</p>
+              {loading ? (
+                <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-5 bg-gray-100 rounded animate-pulse" />)}</div>
+              ) : stats.topArticles.length === 0 ? (
+                <p className="text-sm text-gray-400">No view data yet. Views are recorded as readers visit articles.</p>
+              ) : (
+                <div className="space-y-2">
+                  {stats.topArticles.slice(0, 7).map((a, i) => {
+                    const maxV = stats.topArticles[0]?.totalViews ?? 1;
+                    return (
+                      <div key={a.id} className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-gray-300 w-5 flex-shrink-0">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-gray-700 truncate">{a.title}</div>
+                          <div className="mt-0.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${(a.totalViews / maxV) * 100}%`, background: "#3b82f6" }} />
+                          </div>
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 flex-shrink-0">{a.totalViews.toLocaleString()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Daily trend sparkline */}
+          {!loading && stats.viewTrend.length > 0 && (
+            <div className="mt-4 bg-white rounded-xl border p-5" style={{ borderColor: "#f0ece8" }}>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Daily Views — Last 30 Days</p>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 60 }}>
+                {stats.viewTrend.map((d) => {
+                  const maxV = Math.max(...stats.viewTrend.map((x) => x.views), 1);
+                  const h = Math.max(2, (d.views / maxV) * 56);
+                  return (
+                    <div key={d.date} title={`${d.date}: ${d.views} views`}
+                      style={{ flex: 1, height: h, background: d.views > 0 ? "#3b82f6" : "#e5e7eb", borderRadius: 2, minWidth: 2 }} />
+                  );
+                })}
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-xs text-gray-300">{stats.viewTrend[0]?.date}</span>
+                <span className="text-xs text-gray-300">{stats.viewTrend[stats.viewTrend.length - 1]?.date}</span>
+              </div>
+            </div>
+          )}
+        </div>
         </div>
 
         {/* KPI row 2 — health */}

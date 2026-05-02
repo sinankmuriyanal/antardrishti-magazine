@@ -44,6 +44,23 @@ export default function ArticlesAdmin() {
 
   useEffect(() => { load(); }, []);
 
+  type ArticleStatus = "published" | "draft" | "archived";
+  function getStatus(a: Article): ArticleStatus {
+    if ((a as Article & { status?: string }).status === "archived") return "archived";
+    return a.isPublished ? "published" : "draft";
+  }
+
+  async function setStatus(article: Article, status: ArticleStatus) {
+    const update = {
+      status,
+      isPublished: status === "published",
+    };
+    await adminUpdateArticle(article.id, update);
+    setArticles((prev) => prev.map((a) =>
+      a.id === article.id ? { ...a, ...update } : a
+    ));
+  }
+
   async function togglePublish(article: Article) {
     await adminUpdateArticle(article.id, { isPublished: !article.isPublished });
     setArticles((prev) => prev.map((a) => a.id === article.id ? { ...a, isPublished: !a.isPublished } : a));
@@ -305,23 +322,38 @@ export default function ArticlesAdmin() {
                           </div>
                         </td>
 
-                        {/* Publish status */}
+                        {/* Status — dropdown selector */}
                         <td className="px-4 py-3">
-                          <button
-                            onClick={() => togglePublish(a)}
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                              a.isPublished
-                                ? "bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600"
-                                : "bg-gray-100 text-gray-500 hover:bg-green-50 hover:text-green-700"
-                            }`}
-                            title={a.isPublished ? "Click to unpublish" : "Click to publish"}
-                          >
-                            <span
-                              className="w-1.5 h-1.5 rounded-full mr-1.5 flex-shrink-0"
-                              style={{ background: a.isPublished ? "#22c55e" : "#d1d5db" }}
-                            />
-                            {a.isPublished ? "Live" : "Draft"}
-                          </button>
+                          {(() => {
+                            const status = getStatus(a);
+                            const cfg = {
+                              published: { label: "Live",     dot: "#22c55e", bg: "#f0fdf4", color: "#15803d" },
+                              draft:     { label: "Draft",    dot: "#9ca3af", bg: "#f9fafb", color: "#6b7280" },
+                              archived:  { label: "Archived", dot: "#f59e0b", bg: "#fffbeb", color: "#b45309" },
+                            }[status];
+                            return (
+                              <select
+                                value={status}
+                                onChange={(e) => setStatus(a, e.target.value as ArticleStatus)}
+                                style={{
+                                  background: cfg.bg,
+                                  color: cfg.color,
+                                  border: `1px solid ${cfg.dot}40`,
+                                  borderRadius: 100,
+                                  padding: "3px 10px 3px 8px",
+                                  fontSize: "0.72rem",
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                  outline: "none",
+                                  appearance: "auto",
+                                }}
+                              >
+                                <option value="published">● Live</option>
+                                <option value="draft">○ Draft</option>
+                                <option value="archived">◑ Archived</option>
+                              </select>
+                            );
+                          })()}
                         </td>
 
                         {/* Editor's pick */}
