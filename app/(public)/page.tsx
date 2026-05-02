@@ -1,9 +1,18 @@
 import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
+import { adminDb } from "@/lib/firebase-admin";
 import { SECTIONS_DATA, getSectionByNumber } from "@/lib/sections";
 import { HeroArticleCard, MiniOverlayCard, OverlayCard } from "@/components/public/ArticleCard";
 import type { Article } from "@/types";
 
 export const revalidate = 3600;
+
+async function fetchHeroConfig(): Promise<{ featuredId: string | null; sidebarIds: string[] }> {
+  try {
+    const snap = await adminDb.collection("config").doc("heroConfig").get();
+    if (snap.exists) return snap.data() as { featuredId: string | null; sidebarIds: string[] };
+  } catch { /* not configured */ }
+  return { featuredId: null, sidebarIds: [] };
+}
 
 export default async function HomePage() {
   let articles: Article[] = [];
@@ -13,8 +22,16 @@ export default async function HomePage() {
     // DB not configured — show empty state
   }
 
-  const featured = articles[0];
-  const heroSidebar = articles.slice(1, 4);
+  // Use curated hero config if set, otherwise fall back to auto-sorted first articles
+  const heroConfig = await fetchHeroConfig();
+  const byId = new Map(articles.map((a) => [a.id, a]));
+
+  const featured: Article | undefined =
+    (heroConfig.featuredId ? byId.get(heroConfig.featuredId) : undefined) ?? articles[0];
+
+  const heroSidebar: Article[] = heroConfig.sidebarIds.length > 0
+    ? heroConfig.sidebarIds.map((id) => byId.get(id)).filter(Boolean) as Article[]
+    : articles.filter((a) => a.id !== featured?.id).slice(0, 3);
 
   // IDs already shown in the hero block — never repeat them in section rows
   const heroIds = new Set([featured?.id, ...heroSidebar.map((a) => a.id)].filter(Boolean));
