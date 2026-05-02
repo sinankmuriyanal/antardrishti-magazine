@@ -38,7 +38,7 @@ export default async function HomePage() {
 
   const heroIds = new Set([featured?.id, ...heroSidebar.map((a) => a.id)].filter(Boolean) as string[]);
 
-  /* ── Zone 2: Latest Reads (8 newest, excluding hero) ──────────────── */
+  /* ── Zone 2: Latest Reads (6 newest = 3×2, excluding hero) ────────── */
   const latestReads = articles
     .filter((a) => !heroIds.has(a.id))
     .sort((a, b) => {
@@ -46,16 +46,14 @@ export default async function HomePage() {
       if (edDiff !== 0) return edDiff;
       return pubTs(b) - pubTs(a);
     })
-    .slice(0, 8);
+    .slice(0, 6);
 
-  const latestIds = new Set([...heroIds, ...latestReads.map((a) => a.id)]);
-
-  /* ── Zone 3: Most Popular (top 5 by totalViews, excluding above) ───── */
+  /* ── Zone 3: Most Popular (top 6 = 3×2 by totalViews, excl hero) ─── */
   const popularReads = articles
-    .filter((a) => !heroIds.has(a.id)) // allow overlap with latestReads — different curation
+    .filter((a) => !heroIds.has(a.id))
     .sort((a, b) => ((b as Article & { totalViews?: number }).totalViews ?? 0) - ((a as Article & { totalViews?: number }).totalViews ?? 0))
     .filter((a) => ((a as Article & { totalViews?: number }).totalViews ?? 0) > 0)
-    .slice(0, 5);
+    .slice(0, 6);
 
   if (articles.length === 0) {
     return (
@@ -75,7 +73,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════
           ZONE 1 — HERO  (admin-curated)
       ════════════════════════════════════════════════ */}
-      <div className="section panel" style={{ background: "var(--color-ink, #0F1923)", paddingTop: "1.75rem", paddingBottom: "1.75rem" }}>
+      <div className="section panel" style={{ background: "#F4F2EF", paddingTop: "1.75rem", paddingBottom: "1.75rem" }}>
         <div className="container max-w-xl">
           <div className="row g-3 col-match">
             {/* Main hero — landscape */}
@@ -115,7 +113,8 @@ export default async function HomePage() {
                 View all <i className="unicon-chevron-right" style={{ fontSize: "0.65rem" }}></i>
               </a>
             </div>
-            <div className="row child-cols-12 sm:child-cols-6 md:child-cols-4 lg:child-cols-3 g-4">
+            {/* 3 columns × 2 rows */}
+            <div className="row child-cols-12 sm:child-cols-6 lg:child-cols-4 g-4">
               {latestReads.map((a) => {
                 const sec = getSectionByNumber(a.sectionNumber);
                 return sec ? (
@@ -145,98 +144,15 @@ export default async function HomePage() {
               </a>
             </div>
 
-            {/* Numbered list layout */}
-            <div className="vstack gap-0">
-              {popularReads.map((a, idx) => {
+            {/* 3 columns × 2 rows — same layout as Latest Reads */}
+            <div className="row child-cols-12 sm:child-cols-6 lg:child-cols-4 g-4">
+              {popularReads.map((a) => {
                 const sec = getSectionByNumber(a.sectionNumber);
-                const views = (a as Article & { totalViews?: number }).totalViews ?? 0;
-                return (
-                  <a
-                    key={a.id}
-                    href={`/article/${a.slug || a.displayId}`}
-                    style={{ textDecoration: "none", display: "block" }}
-                  >
-                    <div
-                      className="popular-row"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "1.25rem",
-                        padding: "1.1rem 0",
-                        borderBottom: idx < popularReads.length - 1 ? "1px solid var(--color-border, #E2DDD8)" : "none",
-                      }}
-                    >
-                      {/* Rank number */}
-                      <span style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: "2rem",
-                        fontWeight: 800,
-                        color: idx === 0 ? "var(--color-primary)" : "rgba(0,0,0,0.08)",
-                        lineHeight: 1,
-                        flexShrink: 0,
-                        width: 36,
-                        textAlign: "center",
-                      }}>
-                        {idx + 1}
-                      </span>
-
-                      {/* Thumbnail */}
-                      <div style={{ flexShrink: 0, width: 72, height: 54, borderRadius: 6, overflow: "hidden" }}>
-                        <img
-                          src={a.featuredImage ?? "/assets/images/common/img-fallback.png"}
-                          alt=""
-                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                        />
-                      </div>
-
-                      {/* Text */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {sec && (
-                          <span style={{
-                            fontFamily: "var(--font-body)", fontSize: "0.58rem", fontWeight: 700,
-                            letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--color-primary)",
-                            display: "block", marginBottom: "0.25rem",
-                          }}>
-                            {sec.name}
-                          </span>
-                        )}
-                        <h4 style={{
-                          fontFamily: "var(--font-display)", fontSize: "0.95rem", fontWeight: 700,
-                          lineHeight: 1.3, letterSpacing: "-0.01em", color: "var(--color-text, #111318)",
-                          margin: 0,
-                          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-                        }}>
-                          {a.title}
-                        </h4>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: "0.3rem" }}>
-                          {a.authorName && (
-                            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", color: "var(--color-muted)" }}>
-                              {a.authorName}
-                            </span>
-                          )}
-                          {a.readingTime && (
-                            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--color-muted)", opacity: 0.7 }}>
-                              · {a.readingTime} min read
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* View count */}
-                      <div style={{ flexShrink: 0, textAlign: "right" }}>
-                        <span style={{
-                          fontFamily: "var(--font-body)", fontSize: "0.72rem", fontWeight: 700,
-                          color: "var(--color-muted)",
-                        }}>
-                          {views.toLocaleString()}
-                        </span>
-                        <span style={{ display: "block", fontFamily: "var(--font-body)", fontSize: "0.58rem", color: "var(--color-muted)", opacity: 0.6 }}>
-                          views
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                );
+                return sec ? (
+                  <div key={a.id}>
+                    <OverlayCard article={a} section={sec} ratio="ratio-4x3" />
+                  </div>
+                ) : null;
               })}
             </div>
           </div>

@@ -150,10 +150,10 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
       className="post type-post panel uc-transition-toggle overflow-hidden h-100"
       style={{ position: "relative", borderRadius: 12 }}
     >
-      {/* Force landscape: 16:9 on desktop, slightly taller on mobile */}
-      <div style={{ position: "relative", aspectRatio: "16/9", minHeight: 260, maxHeight: 520, overflow: "hidden" }}>
+      {/* Force landscape: 16:9, no portrait */}
+      <div style={{ position: "relative", aspectRatio: "16/9", width: "100%", overflow: "hidden" }}>
         <img
-          className="media-cover image uc-transition-scale-up uc-transition-opaque"
+          className="media-cover image uc-transition-scale-up"
           src={img}
           alt={article.title}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
@@ -200,7 +200,7 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
   );
 }
 
-/* ── SidebarArticleCard — section-explorer style for hero sidebar ────────── */
+/* ── SidebarArticleCard — stretches to fill sidebar column height ─────────── */
 export function SidebarArticleCard({ article, section }: { article: Article; section: Section }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   return (
@@ -208,44 +208,42 @@ export function SidebarArticleCard({ article, section }: { article: Article; sec
       className="post type-post panel uc-transition-toggle sidebar-article-card"
       style={{
         borderRadius: 10, overflow: "hidden",
-        border: "1px solid var(--color-border, #E2DDD8)",
-        background: "var(--color-ink, #0F1923)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "#1a2535",
+        /* fill the flex-fill parent fully */
         height: "100%", display: "flex", flexDirection: "column",
       }}
     >
-      {/* Image */}
-      <div style={{ position: "relative", aspectRatio: "16/9", overflow: "hidden", flexShrink: 0 }}>
+      {/* Image — flex:1 so it fills all space not taken by text */}
+      <div style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden" }}>
         <img
           src={img}
           alt={article.title}
           className="uc-transition-scale-up"
+          /* NO uc-transition-opaque — image always visible */
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
         />
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(to top, rgba(10,14,20,0.7) 0%, transparent 60%)",
+          background: "linear-gradient(to top, rgba(10,14,20,0.85) 0%, rgba(10,14,20,0.2) 50%, transparent 100%)",
         }} />
         <AuthorTopPill article={article} size="sm" />
-        {/* Section chip on image */}
-        <div style={{ position: "absolute", bottom: 8, left: 10, zIndex: 2 }}>
-          <a href={sectionHref(section)} style={{ textDecoration: "none" }}>
-            <span style={{
-              fontFamily: "var(--font-body)", fontSize: "0.52rem", fontWeight: 700,
-              letterSpacing: "0.1em", textTransform: "uppercase",
-              color: "var(--color-primary)", background: "rgba(10,14,20,0.55)",
-              backdropFilter: "blur(4px)", padding: "2px 7px", borderRadius: 100,
-              border: "1px solid rgba(232,82,29,0.4)",
-            }}>
-              {section.name}
-            </span>
-          </a>
-        </div>
       </div>
-      {/* Text */}
-      <div style={{ padding: "0.75rem 0.9rem 0.85rem", flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+
+      {/* Text — fixed height at bottom */}
+      <div style={{ padding: "0.7rem 0.9rem 0.8rem", flexShrink: 0, background: "#1a2535" }}>
+        <a href={sectionHref(section)} style={{ textDecoration: "none" }}>
+          <span style={{
+            fontFamily: "var(--font-body)", fontSize: "0.52rem", fontWeight: 700,
+            letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-primary)",
+            display: "block", marginBottom: "0.3rem",
+          }}>
+            {section.name}
+          </span>
+        </a>
         <h4 style={{
-          fontFamily: "var(--font-display)", fontSize: "0.88rem", fontWeight: 700,
-          lineHeight: 1.3, letterSpacing: "-0.01em", color: "rgba(255,255,255,0.92)", margin: 0,
+          fontFamily: "var(--font-display)", fontSize: "0.85rem", fontWeight: 700,
+          lineHeight: 1.28, letterSpacing: "-0.01em", color: "rgba(255,255,255,0.92)", margin: 0,
           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
           <a href={articleHref(article)} style={{ color: "inherit", textDecoration: "none" }}>
@@ -253,7 +251,7 @@ export function SidebarArticleCard({ article, section }: { article: Article; sec
           </a>
         </h4>
         {article.readingTime && (
-          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.65rem", color: "rgba(255,255,255,0.35)", marginTop: "auto" }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.62rem", color: "rgba(255,255,255,0.3)", display: "block", marginTop: "0.25rem" }}>
             {article.readingTime} min read
           </span>
         )}

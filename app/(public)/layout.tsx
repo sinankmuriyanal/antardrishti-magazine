@@ -131,9 +131,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   data-uc-navbar=" animation: uc-animation-slide-top-small; duration: 150;"
                 >
                   <div className="uc-navbar-left gap-4">
-                    {/* Hamburger (mobile) — React-controlled */}
-                    <div className="d-block lg:d-none">
+                    {/* Hamburger + Search (mobile) — React-controlled */}
+                    <div className="d-block lg:d-none" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       <MobileNav />
+                      <SearchOverlay />
                     </div>
                     {/* Logo (desktop) */}
                     <div className="uc-logo d-none md:d-block">
@@ -161,7 +162,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
                   {/* Logo (mobile center) */}
                   <div className="uc-navbar-center">
-                    <div className="uc-logo d-block md:d-none">
+                    <div className="uc-logo d-block md:d-none" style={{ padding: "10px 0" }}>
                       <a href="/">
                         <img
                           src="/assets/images/common/White Logo.png"
@@ -173,9 +174,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     </div>
                   </div>
 
-                  {/* Right actions — React-controlled */}
+                  {/* Right — theme toggle only (search moved to left on mobile) */}
                   <div className="uc-navbar-right gap-1">
-                    <SearchOverlay />
+                    <div className="d-none lg:d-block">
+                      <SearchOverlay />
+                    </div>
                     <ThemeToggle className="btn border-0 p-0 w-36px h-36px cstack text-dark dark:text-white hover:text-primary transition-colors duration-200 ms-1" />
                   </div>
                 </div>
