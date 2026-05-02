@@ -637,6 +637,20 @@ article:hover .uc-transition-scale-up {
   border-color: rgba(255,255,255,0.1);
 }
 
+/* ─── Popular reads row hover ─── */
+.popular-row { transition: background 0.15s ease; border-radius: 8px; }
+.popular-row:hover { background: var(--color-warm-bg, #FAF9F6); }
+
+/* ─── Sidebar article card hover ─── */
+.sidebar-article-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.sidebar-article-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  transform: translateY(-2px);
+}
+
 /* ─── Section explore card hover ─── */
 .section-explore-card > div {
   box-shadow: 0 1px 6px rgba(0,0,0,0.05);

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 const NAV_LINKS = [
+  { href: "/",                         label: "Home" },
   { href: "/section/editorial",        label: "Editorial" },
   { href: "/section/management",       label: "Management" },
   { href: "/section/analytics",        label: "Analytics" },
@@ -196,7 +197,7 @@ export function MobileNav() {
         overflowY: "auto",
       }}>
         {/* Drawer header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 20px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "28px 20px 24px" }}>
           <a href="/">
             <img src="/assets/images/common/White Logo.png" alt="Antardrishti" style={{ height: 36, width: "auto" }} />
           </a>

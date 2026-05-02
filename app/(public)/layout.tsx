@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 const NAV_LINKS = [
+  { href: "/", label: "Home" },
   { href: "/section/editorial", label: "Editorial" },
   { href: "/section/management", label: "Management" },
   { href: "/section/analytics", label: "Analytics" },

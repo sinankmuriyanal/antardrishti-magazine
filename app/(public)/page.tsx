@@ -1,8 +1,7 @@
 import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { adminDb } from "@/lib/firebase-admin";
-import { SECTIONS_DATA, getSectionByNumber } from "@/lib/sections";
-import { HeroArticleCard, MiniOverlayCard, OverlayCard } from "@/components/public/ArticleCard";
-import { absoluteImgUrl } from "@/lib/utils";
+import { getSectionByNumber } from "@/lib/sections";
+import { HeroArticleCard, SidebarArticleCard, OverlayCard } from "@/components/public/ArticleCard";
 import type { Article } from "@/types";
 
 export const revalidate = 3600;
@@ -26,7 +25,7 @@ export default async function HomePage() {
     articles = await fetchArticles({ published: true });
   } catch { /* DB not configured */ }
 
-  /* ── Hero ─────────────────────────────────────────────────────────── */
+  /* ── Hero config ───────────────────────────────────────────────────── */
   const heroConfig = await fetchHeroConfig();
   const byId = new Map(articles.map((a) => [a.id, a]));
 
@@ -39,7 +38,7 @@ export default async function HomePage() {
 
   const heroIds = new Set([featured?.id, ...heroSidebar.map((a) => a.id)].filter(Boolean) as string[]);
 
-  /* ── Zone 2: Latest Reads (8 newest, excluding hero) ─────────────── */
+  /* ── Zone 2: Latest Reads (8 newest, excluding hero) ──────────────── */
   const latestReads = articles
     .filter((a) => !heroIds.has(a.id))
     .sort((a, b) => {
@@ -49,26 +48,18 @@ export default async function HomePage() {
     })
     .slice(0, 8);
 
-  const latestIds = new Set(latestReads.map((a) => a.id));
+  const latestIds = new Set([...heroIds, ...latestReads.map((a) => a.id)]);
 
-  /* ── Zone 3: Explore Sections ────────────────────────────────────── */
-  // One best article per section (Edition 2 preferred, then newest)
-  const sectionCards = SECTIONS_DATA.map((sec) => {
-    const secArticles = articles
-      .filter((a) => a.sectionNumber === sec.number)
-      .sort((a, b) => {
-        const edDiff = (b.edition ?? 1) - (a.edition ?? 1);
-        if (edDiff !== 0) return edDiff;
-        return pubTs(b) - pubTs(a);
-      });
-    const count = secArticles.length;
-    const pick = secArticles[0];
-    return { section: sec, count, pick };
-  }).filter((s) => s.count > 0);
+  /* ── Zone 3: Most Popular (top 5 by totalViews, excluding above) ───── */
+  const popularReads = articles
+    .filter((a) => !heroIds.has(a.id)) // allow overlap with latestReads — different curation
+    .sort((a, b) => ((b as Article & { totalViews?: number }).totalViews ?? 0) - ((a as Article & { totalViews?: number }).totalViews ?? 0))
+    .filter((a) => ((a as Article & { totalViews?: number }).totalViews ?? 0) > 0)
+    .slice(0, 5);
 
   if (articles.length === 0) {
     return (
-      <div className="section panel py-9" style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center" }}>
           <p style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", fontWeight: 600, opacity: 0.4, color: "var(--color-ink)" }}>
             No articles yet
@@ -82,22 +73,24 @@ export default async function HomePage() {
   return (
     <>
       {/* ════════════════════════════════════════════════
-          ZONE 1 — HERO
+          ZONE 1 — HERO  (admin-curated)
       ════════════════════════════════════════════════ */}
-      <div className="section panel" style={{ background: "#fff", paddingTop: "2rem", paddingBottom: "2rem" }}>
+      <div className="section panel" style={{ background: "var(--color-ink, #0F1923)", paddingTop: "1.75rem", paddingBottom: "1.75rem" }}>
         <div className="container max-w-xl">
-          <div className="row g-3 col-match" style={{ minHeight: 500 }}>
+          <div className="row g-3 col-match">
+            {/* Main hero — landscape */}
             {featured && (
-              <div className="col-12 lg:col-8" style={{ borderRadius: "10px", overflow: "hidden" }}>
+              <div className="col-12 lg:col-8">
                 <HeroArticleCard article={featured} section={getSectionByNumber(featured.sectionNumber)!} />
               </div>
             )}
+            {/* Sidebar — explorer-style dark cards */}
             {heroSidebar.length > 0 && (
               <div className="col-12 lg:col-4">
                 <div className="vstack gap-3 h-100">
                   {heroSidebar.map((a) => (
-                    <div key={a.id} className="flex-fill" style={{ minHeight: 0, borderRadius: "10px", overflow: "hidden" }}>
-                      <MiniOverlayCard article={a} section={getSectionByNumber(a.sectionNumber)!} />
+                    <div key={a.id} className="flex-fill" style={{ minHeight: 0 }}>
+                      <SidebarArticleCard article={a} section={getSectionByNumber(a.sectionNumber)!} />
                     </div>
                   ))}
                 </div>
@@ -113,7 +106,6 @@ export default async function HomePage() {
       {latestReads.length > 0 && (
         <div className="section panel py-6 lg:py-8" style={{ background: "var(--color-warm-bg, #FAF9F6)" }}>
           <div className="container max-w-xl">
-            {/* Section header */}
             <div className="mag-section-header" style={{ marginBottom: "1.75rem" }}>
               <div className="mag-section-header__left">
                 <span className="mag-section-header__rule" />
@@ -123,8 +115,6 @@ export default async function HomePage() {
                 View all <i className="unicon-chevron-right" style={{ fontSize: "0.65rem" }}></i>
               </a>
             </div>
-
-            {/* 4-col grid — 2 rows of 4 */}
             <div className="row child-cols-12 sm:child-cols-6 md:child-cols-4 lg:child-cols-3 g-4">
               {latestReads.map((a) => {
                 const sec = getSectionByNumber(a.sectionNumber);
@@ -140,121 +130,112 @@ export default async function HomePage() {
       )}
 
       {/* ════════════════════════════════════════════════
-          ZONE 3 — EXPLORE SECTIONS
+          ZONE 3 — MOST POPULAR
       ════════════════════════════════════════════════ */}
-      {sectionCards.length > 0 && (
+      {popularReads.length > 0 && (
         <div className="section panel py-6 lg:py-8" style={{ background: "#fff" }}>
           <div className="container max-w-xl">
-            {/* Section header */}
             <div className="mag-section-header" style={{ marginBottom: "1.75rem" }}>
               <div className="mag-section-header__left">
                 <span className="mag-section-header__rule" />
-                <h2 className="mag-section-header__title">Explore Sections</h2>
+                <h2 className="mag-section-header__title">Most Popular</h2>
               </div>
+              <a href="/all-articles" className="mag-section-header__link">
+                All articles <i className="unicon-chevron-right" style={{ fontSize: "0.65rem" }}></i>
+              </a>
             </div>
 
-            {/* Section cards grid */}
-            <div className="row child-cols-12 sm:child-cols-6 lg:child-cols-3 g-4">
-              {sectionCards.map(({ section, count, pick }) => {
-                const img = absoluteImgUrl(pick?.featuredImage) ?? "/assets/images/common/img-fallback.png";
+            {/* Numbered list layout */}
+            <div className="vstack gap-0">
+              {popularReads.map((a, idx) => {
+                const sec = getSectionByNumber(a.sectionNumber);
+                const views = (a as Article & { totalViews?: number }).totalViews ?? 0;
                 return (
-                  <div key={section.id}>
-                    <a
-                      href={`/section/${section.slug}`}
-                      style={{ display: "block", textDecoration: "none" }}
-                      className="section-explore-card"
-                    >
-                      <div style={{
-                        borderRadius: 10,
-                        overflow: "hidden",
-                        border: "1px solid var(--color-border, #E2DDD8)",
-                        background: "white",
-                        height: "100%",
+                  <a
+                    key={a.id}
+                    href={`/article/${a.slug || a.displayId}`}
+                    style={{ textDecoration: "none", display: "block" }}
+                  >
+                    <div
+                      className="popular-row"
+                      style={{
                         display: "flex",
-                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "1.25rem",
+                        padding: "1.1rem 0",
+                        borderBottom: idx < popularReads.length - 1 ? "1px solid var(--color-border, #E2DDD8)" : "none",
+                      }}
+                    >
+                      {/* Rank number */}
+                      <span style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "2rem",
+                        fontWeight: 800,
+                        color: idx === 0 ? "var(--color-primary)" : "rgba(0,0,0,0.08)",
+                        lineHeight: 1,
+                        flexShrink: 0,
+                        width: 36,
+                        textAlign: "center",
                       }}>
-                        {/* Image */}
-                        <div style={{ position: "relative", aspectRatio: "16/9", overflow: "hidden" }}>
-                          <img
-                            src={img}
-                            alt={section.name}
-                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                            className="uc-transition-scale-up"
-                          />
-                          {/* Dark overlay */}
-                          <div style={{
-                            position: "absolute", inset: 0,
-                            background: "linear-gradient(to top, rgba(10,14,20,0.75) 0%, rgba(10,14,20,0.1) 60%, transparent 100%)",
-                          }} />
-                          {/* Section number */}
-                          <span style={{
-                            position: "absolute", top: 10, left: 10,
-                            fontFamily: "var(--font-body)", fontSize: "0.58rem", fontWeight: 700,
-                            letterSpacing: "0.12em", textTransform: "uppercase",
-                            color: "rgba(255,255,255,0.55)",
-                            background: "rgba(10,14,20,0.45)", backdropFilter: "blur(4px)",
-                            padding: "3px 8px", borderRadius: 100,
-                            border: "1px solid rgba(255,255,255,0.12)",
-                          }}>
-                            Section {String(section.number).padStart(2, "0")}
-                          </span>
-                        </div>
+                        {idx + 1}
+                      </span>
 
-                        {/* Text */}
-                        <div style={{ padding: "1rem 1.1rem 1.1rem", flex: 1, display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                          <h3 style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: "1rem",
-                            fontWeight: 700,
-                            color: "var(--color-text, #111318)",
-                            margin: 0,
-                            letterSpacing: "-0.01em",
+                      {/* Thumbnail */}
+                      <div style={{ flexShrink: 0, width: 72, height: 54, borderRadius: 6, overflow: "hidden" }}>
+                        <img
+                          src={a.featuredImage ?? "/assets/images/common/img-fallback.png"}
+                          alt=""
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                      </div>
+
+                      {/* Text */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {sec && (
+                          <span style={{
+                            fontFamily: "var(--font-body)", fontSize: "0.58rem", fontWeight: 700,
+                            letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--color-primary)",
+                            display: "block", marginBottom: "0.25rem",
                           }}>
-                            {section.name}
-                          </h3>
-                          {section.description && (
-                            <p style={{
-                              fontFamily: "var(--font-body)",
-                              fontSize: "0.78rem",
-                              lineHeight: 1.55,
-                              color: "var(--color-muted)",
-                              margin: 0,
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}>
-                              {section.description}
-                            </p>
+                            {sec.name}
+                          </span>
+                        )}
+                        <h4 style={{
+                          fontFamily: "var(--font-display)", fontSize: "0.95rem", fontWeight: 700,
+                          lineHeight: 1.3, letterSpacing: "-0.01em", color: "var(--color-text, #111318)",
+                          margin: 0,
+                          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+                        }}>
+                          {a.title}
+                        </h4>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: "0.3rem" }}>
+                          {a.authorName && (
+                            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", color: "var(--color-muted)" }}>
+                              {a.authorName}
+                            </span>
                           )}
-                          <div style={{
-                            marginTop: "auto",
-                            paddingTop: "0.6rem",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}>
-                            <span style={{
-                              fontFamily: "var(--font-body)",
-                              fontSize: "0.68rem",
-                              color: "var(--color-muted)",
-                            }}>
-                              {count} article{count !== 1 ? "s" : ""}
+                          {a.readingTime && (
+                            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--color-muted)", opacity: 0.7 }}>
+                              · {a.readingTime} min read
                             </span>
-                            <span style={{
-                              fontFamily: "var(--font-body)",
-                              fontSize: "0.7rem",
-                              fontWeight: 700,
-                              color: "var(--color-primary)",
-                              letterSpacing: "0.04em",
-                            }}>
-                              Read more &rarr;
-                            </span>
-                          </div>
+                          )}
                         </div>
                       </div>
-                    </a>
-                  </div>
+
+                      {/* View count */}
+                      <div style={{ flexShrink: 0, textAlign: "right" }}>
+                        <span style={{
+                          fontFamily: "var(--font-body)", fontSize: "0.72rem", fontWeight: 700,
+                          color: "var(--color-muted)",
+                        }}>
+                          {views.toLocaleString()}
+                        </span>
+                        <span style={{ display: "block", fontFamily: "var(--font-body)", fontSize: "0.58rem", color: "var(--color-muted)", opacity: 0.6 }}>
+                          views
+                        </span>
+                      </div>
+                    </div>
+                  </a>
                 );
               })}
             </div>
@@ -262,13 +243,13 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* ── Browse all CTA ── */}
+      {/* ── CTA ── */}
       <div className="cta-banner">
         <div className="container max-w-xl">
           <div className="row items-center">
             <div className="col-12 md:col-8">
               <p className="cta-banner__text">Explore the full collection</p>
-              <p className="cta-banner__sub">{articles.length} articles across {sectionCards.length} sections</p>
+              <p className="cta-banner__sub">{articles.length} articles across {new Set(articles.map((a) => a.sectionNumber)).size} sections</p>
             </div>
             <div className="col-12 md:col-4 text-md-end mt-3 md:mt-0">
               <a href="/all-articles" className="btn btn-primary"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { revalidatePath } from "next/cache";
 
 const DOC = "heroConfig";
 
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
       { ...body, updatedAt: FieldValue.serverTimestamp() },
       { merge: true }
     );
+    revalidatePath("/"); // force homepage to regenerate immediately
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
