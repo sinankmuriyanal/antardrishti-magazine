@@ -3,6 +3,8 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
 import { SECTIONS_DATA } from "@/lib/sections";
+import { authedFetch } from "@/lib/auth-client";
+import { auth } from "@/lib/firebase";
 import type { Article } from "@/types";
 
 interface ViewEntry { id: string; title: string; displayId: string; totalViews: number; sectionNumber: number; }
@@ -53,10 +55,15 @@ export default function AdminDashboard() {
     async function load() {
       try {
         const [articles, allComments, viewsData] = await Promise.all([
-          fetch("/api/articles").then((r) => r.json() as Promise<Article[]>),
-          fetch("/api/comments").then((r) => r.json() as Promise<{ isApproved: boolean }[]>),
-          fetch("/api/views?days=30").then((r) => r.json() as Promise<{ topArticles: ViewEntry[]; trend: TrendEntry[] }>).catch(() => ({ topArticles: [], trend: [] })),
+          authedFetch("/api/articles").then((r) => r.json() as Promise<Article[]>),
+          authedFetch("/api/comments").then((r) => r.json() as Promise<{ isApproved: boolean }[]>),
+          authedFetch("/api/views?days=30").then((r) => r.json() as Promise<{ topArticles: ViewEntry[]; trend: TrendEntry[] }>).catch(() => ({ topArticles: [], trend: [] })),
         ]);
+        if (!Array.isArray(articles) || !Array.isArray(allComments)) {
+          // Auth failed — leave stats at zero, stop loading
+          setLoading(false);
+          return;
+        }
 
         const sectionMap: Record<number, string> = {};
         SECTIONS_DATA.forEach((s) => { sectionMap[s.number] = s.name; });
@@ -108,7 +115,11 @@ export default function AdminDashboard() {
       } catch { /* DB not configured */ }
       setLoading(false);
     }
-    load();
+    // Wait for Firebase Auth to hydrate before hitting admin-only endpoints
+    const unsub = auth.onAuthStateChanged((user) => {
+      if (user) load(); else setLoading(false);
+    });
+    return unsub;
   }, []);
 
   const maxSectionCount = Math.max(...stats.sectionCoverage.map((s) => s.count), 1);

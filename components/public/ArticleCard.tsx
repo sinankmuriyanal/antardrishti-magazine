@@ -142,16 +142,16 @@ function AuthorMetaLight({ article }: { article: Article }) {
   );
 }
 
-/* ── HeroArticleCard — main large hero (landscape) ─────────────────────── */
+/* ── HeroArticleCard — main large hero (landscape, fills column height) ── */
 export function HeroArticleCard({ article, section }: { article: Article; section: Section }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   return (
     <article
-      className="post type-post panel uc-transition-toggle overflow-hidden h-100"
-      style={{ position: "relative", borderRadius: 12 }}
+      className="post type-post panel uc-transition-toggle overflow-hidden h-100 hero-card"
+      style={{ position: "relative", borderRadius: 12, display: "flex", flexDirection: "column" }}
     >
-      {/* Force landscape: 16:9, no portrait */}
-      <div style={{ position: "relative", aspectRatio: "16/9", width: "100%", overflow: "hidden" }}>
+      {/* Image fills the entire card height; min height keeps it readable on mobile */}
+      <div style={{ position: "relative", flex: 1, width: "100%", overflow: "hidden", minHeight: 320 }}>
         <img
           src={img}
           alt={article.title}
