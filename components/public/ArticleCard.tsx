@@ -478,7 +478,7 @@ export function HorizontalCard({ article, section }: { article: Article; section
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   return (
     <article
-      className="post type-post panel uc-transition-toggle"
+      className="post type-post panel uc-transition-toggle h-card"
       style={{
         display: "flex",
         gap: 0,
@@ -486,17 +486,7 @@ export function HorizontalCard({ article, section }: { article: Article; section
         borderRadius: 10,
         overflow: "hidden",
         border: "1px solid var(--color-border, #E2DDD8)",
-        boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
-        transition: "box-shadow 0.25s ease, transform 0.25s ease",
         height: "100%",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)";
-        (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.05)";
-        (e.currentTarget as HTMLElement).style.transform = "none";
       }}
     >
       {/* Image — left column */}

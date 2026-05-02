@@ -637,6 +637,16 @@ article:hover .uc-transition-scale-up {
   border-color: rgba(255,255,255,0.1);
 }
 
+/* ─── Horizontal card hover (replaces JS event handlers) ─── */
+.h-card {
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.h-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
+}
+
 /* ─── Responsive tweaks ─── */
 @media (max-width: 768px) {
   .post-content p { font-size: 0.97rem; line-height: 1.8; }
