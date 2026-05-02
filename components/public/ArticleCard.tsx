@@ -43,50 +43,63 @@ function SectionChip({ name, href }: { name: string; href: string }) {
   );
 }
 
-/** Small author circle + name — white text, for dark overlays. Reading time is a separate pill. */
-function AuthorMetaDark({ article }: { article: Article }) {
+/**
+ * Author pill — top-right corner of every overlay card.
+ * Contains: avatar circle · author name · reading time.
+ * Frosted-glass background so it reads clearly over any image.
+ */
+function AuthorTopPill({ article, size = "md" }: { article: Article; size?: "sm" | "md" }) {
   const img = absoluteImgUrl(article.authorImage);
   if (!img && !article.authorName) return null;
+  const avatarSize = size === "sm" ? 20 : 24;
+  const fontSize  = size === "sm" ? "0.6rem" : "0.65rem";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+    <div style={{
+      position: "absolute",
+      top: 10,
+      right: 10,
+      zIndex: 3,
+      display: "flex",
+      alignItems: "center",
+      gap: 5,
+      background: "rgba(10,14,20,0.58)",
+      backdropFilter: "blur(6px)",
+      WebkitBackdropFilter: "blur(6px)",
+      border: "1px solid rgba(255,255,255,0.14)",
+      borderRadius: 100,
+      padding: img ? `3px 10px 3px 3px` : "3px 10px",
+      maxWidth: "calc(100% - 20px)",
+    }}>
       {img && (
         <img
           src={img}
           alt=""
-          style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", border: "1.5px solid rgba(255,255,255,0.35)", flexShrink: 0 }}
+          style={{ width: avatarSize, height: avatarSize, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
         />
       )}
       {article.authorName && (
-        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.75)", fontWeight: 500 }}>
+        <span style={{
+          fontFamily: "var(--font-body)",
+          fontSize,
+          fontWeight: 600,
+          color: "rgba(255,255,255,0.9)",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          maxWidth: 120,
+        }}>
           {article.authorName}
         </span>
       )}
+      {article.readingTime && (
+        <>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.55rem" }}>·</span>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.6rem", color: "rgba(255,255,255,0.6)", whiteSpace: "nowrap" }}>
+            {article.readingTime} min
+          </span>
+        </>
+      )}
     </div>
-  );
-}
-
-/** Pill badge showing reading time — top-right of image */
-function ReadingTimePill({ minutes }: { minutes?: number }) {
-  if (!minutes) return null;
-  return (
-    <span style={{
-      position: "absolute",
-      top: "10px",
-      right: "10px",
-      zIndex: 2,
-      fontFamily: "var(--font-body)",
-      fontSize: "0.6rem",
-      fontWeight: 700,
-      letterSpacing: "0.05em",
-      color: "white",
-      background: "rgba(10,14,20,0.62)",
-      backdropFilter: "blur(4px)",
-      padding: "3px 8px",
-      borderRadius: "100px",
-      border: "1px solid rgba(255,255,255,0.15)",
-    }}>
-      {minutes} min read
-    </span>
   );
 }
 
@@ -147,8 +160,8 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.96) 0%, rgba(10,14,20,0.6) 40%, rgba(10,14,20,0.1) 80%, transparent 100%)",
         }} />
-        <ReadingTimePill minutes={article.readingTime} />
-        <div className="position-absolute top-0 start-0 end-0 z-1" style={{ padding: "1.25rem 1.5rem 0", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <AuthorTopPill article={article} />
+        <div className="position-absolute top-0 start-0 z-1" style={{ padding: "1.25rem 1.5rem 0" }}>
           <span style={{
             fontFamily: "var(--font-body)",
             fontSize: "0.6rem",
@@ -176,7 +189,6 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
               lineHeight: 1.2,
               letterSpacing: "-0.02em",
               maxWidth: 540,
-              marginBottom: "1rem",
             }}
           >
             <a
@@ -187,7 +199,6 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
               {article.title}
             </a>
           </h2>
-          <AuthorMetaDark article={article} />
         </div>
       </div>
       <a href={articleHref(article)} className="position-cover" aria-label={article.title} />
@@ -213,7 +224,7 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.94) 0%, rgba(10,14,20,0.3) 55%, transparent 100%)",
         }} />
-        <ReadingTimePill minutes={article.readingTime} />
+        <AuthorTopPill article={article} />
         <div className="position-absolute bottom-0 start-0 end-0 p-3 z-1">
           <div style={{ marginBottom: "0.4rem" }}>
             <a href={sectionHref(section)} className="text-none">
@@ -241,12 +252,10 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
               WebkitLineClamp: 3,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              marginBottom: "0.65rem",
             }}
           >
             <a className="text-none text-white" href={articleHref(article)}>{article.title}</a>
           </h3>
-          <AuthorMetaDark article={article} />
         </div>
       </div>
       <a href={articleHref(article)} className="position-cover" aria-label={article.title} />
@@ -272,7 +281,7 @@ export function MiniOverlayCard({ article, section }: { article: Article; sectio
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.95) 0%, rgba(10,14,20,0.3) 55%, transparent 100%)",
         }} />
-        <ReadingTimePill minutes={article.readingTime} />
+        <AuthorTopPill article={article} size="sm" />
         <div className="position-absolute bottom-0 start-0 end-0 p-3 z-1">
           <a href={sectionHref(section)} className="text-none" style={{ display: "inline-block", marginBottom: "4px" }}>
             <span style={{
@@ -298,12 +307,10 @@ export function MiniOverlayCard({ article, section }: { article: Article; sectio
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              marginBottom: "0.55rem",
             }}
           >
             <a className="text-none text-white" href={articleHref(article)}>{article.title}</a>
           </h4>
-          <AuthorMetaDark article={article} />
         </div>
       </div>
       <a href={articleHref(article)} className="position-cover" aria-label={article.title} />
