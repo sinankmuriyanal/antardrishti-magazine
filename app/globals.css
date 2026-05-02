@@ -242,15 +242,15 @@ article:hover .uc-transition-scale-up {
 
 /* Body images embedded from docx */
 .article-figure {
-  margin: 2rem auto;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  margin: 2.5rem 0;
 }
 
 .article-figure img {
   display: block;
   max-width: 100%;
   height: auto;
-  margin: 0 auto;
   border-radius: var(--radius-md);
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
