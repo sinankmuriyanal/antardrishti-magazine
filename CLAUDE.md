@@ -173,3 +173,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-02] update: fix_2_2_image.js,globals.css
 - [2026-05-02] docs(changelog): sync 2026-05-02
 - [2026-05-02] update: (public)/article/[slug]/page.tsx
+- [2026-05-02] update: public/ArticleCard.tsx
