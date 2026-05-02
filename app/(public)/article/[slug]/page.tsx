@@ -101,7 +101,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* Article header */}
         <div className="container max-w-xl">
-          <div className="panel vstack gap-3 md:gap-4 text-center" style={{ paddingTop: "2.5rem", paddingBottom: "1.5rem" }}>
+          <div className="panel vstack gap-3 md:gap-4" style={{ paddingTop: "2.5rem", paddingBottom: "1.5rem", alignItems: "center", textAlign: "center" }}>
 
             {/* Section badge */}
             {section && (
@@ -196,14 +196,6 @@ export default async function ArticlePage({ params }: Props) {
                   <span style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.9rem" }}>&middot;</span>
                   <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", letterSpacing: "0.04em" }}>
                     {article.readingTime} min read
-                  </span>
-                </>
-              )}
-              {section && (
-                <>
-                  <span style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.9rem" }}>&middot;</span>
-                  <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.35)", letterSpacing: "0.04em" }}>
-                    {section.name}
                   </span>
                 </>
               )}

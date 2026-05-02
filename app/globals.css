@@ -240,6 +240,24 @@ article:hover .uc-transition-scale-up {
   display: block;
 }
 
+/* Center outer figure wrappers (Edition-1 UIKit content + any bare figures) */
+.post-content > div > figure,
+.post-content > figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem auto;
+  max-width: 85%;
+}
+
+/* Inner UIKit ratio/featured-image figures must keep full width of their parent */
+.post-content figure.featured-image,
+.post-content figure[class*="ratio"] {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
 /* Body images embedded from docx */
 .article-figure {
   display: flex;
