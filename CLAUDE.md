@@ -171,3 +171,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-02] update: check_content_images.js,check_firestore_images.js,extract_docx.py,fix_firestore.js
 - [2026-05-02] update: bust_image_cache.js,check_all_urls.js,debug_author_images.js,globals.css,reupload_fresh_paths.js,verify_storage_images.js
 - [2026-05-02] update: fix_2_2_image.js,globals.css
+- [2026-05-02] docs(changelog): sync 2026-05-02

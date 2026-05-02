@@ -140,37 +140,8 @@ export default async function ArticlePage({ params }: Props) {
               </h1>
             </div>
 
-            {/* Subtitle */}
-            {article.subtitle && (
-              <p style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "1.05rem",
-                lineHeight: 1.6,
-                color: "rgba(255,255,255,0.6)",
-                maxWidth: 560,
-                margin: "0 auto",
-                fontStyle: "italic",
-              }}>
-                {article.subtitle}
-              </p>
-            )}
-
-            {/* Excerpt (when no subtitle) */}
-            {!article.subtitle && article.excerpt && (
-              <p style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "1.05rem",
-                lineHeight: 1.65,
-                color: "rgba(255,255,255,0.55)",
-                maxWidth: 580,
-                margin: "0 auto",
-              }}>
-                {article.excerpt}
-              </p>
-            )}
-
             {/* Meta row */}
-            <div className="hstack gap-3 justify-center items-center flex-wrap" style={{ marginTop: "0.5rem" }}>
+            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: "0.25rem" }}>
               {authorImgUrl && (
                 <img
                   src={authorImgUrl}
