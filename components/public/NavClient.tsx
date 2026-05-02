@@ -13,8 +13,8 @@ const NAV_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { href: "https://instagram.com/antardrishti_dse", icon: "unicon-logo-instagram", label: "Instagram" },
-  { href: "https://linkedin.com/company/antardrishti-dse", icon: "unicon-logo-linkedin", label: "LinkedIn" },
+  { href: "https://www.instagram.com/dse_mba_ba?igsh=c3Y1YXljYTFkN3Zk", icon: "unicon-logo-instagram", label: "Instagram" },
+  { href: "https://www.linkedin.com/company/mbadse/", icon: "unicon-logo-linkedin", label: "LinkedIn" },
   { href: "mailto:antardrishtidse@gmail.com", icon: "unicon-email", label: "Email" },
 ];
 
