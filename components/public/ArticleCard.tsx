@@ -20,8 +20,9 @@ function formatDate(timestamp: unknown): string {
 function sectionHref(s: Section) { return `/section/${s.slug}`; }
 function articleHref(a: Article) { return `/article/${a.slug || a.displayId}`; }
 
-/* ─── Section label chip ─── */
-function SectionChip({ name, href, dark = true }: { name: string; href: string; dark?: boolean }) {
+/* ── Shared sub-components ─────────────────────────────────────────────── */
+
+function SectionChip({ name, href }: { name: string; href: string }) {
   return (
     <a href={href} className="text-none" style={{ display: "inline-block" }}>
       <span style={{
@@ -30,7 +31,7 @@ function SectionChip({ name, href, dark = true }: { name: string; href: string; 
         fontWeight: 700,
         letterSpacing: "0.12em",
         textTransform: "uppercase",
-        color: dark ? "var(--color-primary)" : "var(--color-primary)",
+        color: "var(--color-primary)",
         border: "1px solid var(--color-primary)",
         padding: "2px 9px",
         borderRadius: "2px",
@@ -42,16 +43,82 @@ function SectionChip({ name, href, dark = true }: { name: string; href: string; 
   );
 }
 
-/* ─── HeroArticleCard — main featured article ─── */
+/** Small author circle + name + reading time — white text, for dark overlays */
+function AuthorMetaDark({ article }: { article: Article }) {
+  const img = absoluteImgUrl(article.authorImage);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+      {img && (
+        <img
+          src={img}
+          alt=""
+          style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover", border: "1.5px solid rgba(255,255,255,0.35)", flexShrink: 0 }}
+        />
+      )}
+      {article.authorName && (
+        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>
+          {article.authorName}
+        </span>
+      )}
+      {article.readingTime && (
+        <>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem" }}>·</span>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "rgba(255,255,255,0.5)" }}>
+            {article.readingTime} min read
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Small author circle + name + reading time — dark text, for light backgrounds */
+function AuthorMetaLight({ article }: { article: Article }) {
+  const img = absoluteImgUrl(article.authorImage);
+  const date = formatDate(article.publishedAt);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+      {img && (
+        <img
+          src={img}
+          alt=""
+          style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", border: "1.5px solid var(--color-border)", flexShrink: 0 }}
+        />
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {article.authorName && (
+          <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "0.78rem", color: "var(--color-text)" }}>
+            {article.authorName}
+          </span>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          {date && (
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--color-muted)" }}>
+              {date}
+            </span>
+          )}
+          {article.readingTime && (
+            <>
+              <span style={{ color: "var(--color-muted)", fontSize: "0.65rem" }}>·</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--color-muted)" }}>
+                {article.readingTime} min read
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── HeroArticleCard — main large hero ─────────────────────────────────── */
 export function HeroArticleCard({ article, section }: { article: Article; section: Section }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
-  const date = formatDate(article.publishedAt);
   return (
     <article
       className="post type-post panel uc-transition-toggle overflow-hidden h-100"
       style={{ minHeight: 500, position: "relative" }}
     >
-      {/* Background image */}
       <div className="h-100 position-relative overflow-hidden" style={{ minHeight: 500 }}>
         <img
           className="media-cover image uc-transition-scale-up uc-transition-opaque"
@@ -59,11 +126,9 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
           alt={article.title}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
         />
-        {/* Multi-layer gradient for depth */}
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.96) 0%, rgba(10,14,20,0.6) 40%, rgba(10,14,20,0.1) 80%, transparent 100%)",
         }} />
-        {/* Top decorative bar */}
         <div className="position-absolute top-0 start-0 end-0 z-1" style={{ padding: "1.25rem 1.5rem 0", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <span style={{
             fontFamily: "var(--font-body)",
@@ -79,7 +144,6 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
             Edition {article.edition}
           </span>
         </div>
-        {/* Content overlay */}
         <div className="position-absolute bottom-0 start-0 end-0 p-4 p-lg-5 z-1">
           <div style={{ marginBottom: "0.75rem" }}>
             <SectionChip name={section.name} href={sectionHref(section)} />
@@ -93,6 +157,7 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
               lineHeight: 1.2,
               letterSpacing: "-0.02em",
               maxWidth: 540,
+              marginBottom: "0.85rem",
             }}
           >
             <a
@@ -103,48 +168,7 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
               {article.title}
             </a>
           </h2>
-          {article.excerpt && (
-            <p
-              className="d-none lg:d-block text-white m-0 mt-2"
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "0.9rem",
-                lineHeight: 1.6,
-                color: "rgba(255,255,255,0.65)",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                maxWidth: 500,
-              }}
-            >
-              {article.excerpt}
-            </p>
-          )}
-          <div className="hstack gap-2 mt-3" style={{ alignItems: "center" }}>
-            {absoluteImgUrl(article.authorImage) && (
-              <img
-                src={absoluteImgUrl(article.authorImage)!}
-                alt=""
-                style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.3)" }}
-              />
-            )}
-            <div className="hstack gap-1" style={{ alignItems: "center" }}>
-              {article.authorName && (
-                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.8rem", fontWeight: 500, color: "rgba(255,255,255,0.8)" }}>
-                  {article.authorName}
-                </span>
-              )}
-              {article.authorName && date && (
-                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.8rem" }}>&nbsp;&middot;&nbsp;</span>
-              )}
-              {date && (
-                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.78rem", color: "rgba(255,255,255,0.45)" }}>
-                  {date}
-                </span>
-              )}
-            </div>
-          </div>
+          <AuthorMetaDark article={article} />
         </div>
       </div>
       <a href={articleHref(article)} className="position-cover" aria-label={article.title} />
@@ -152,7 +176,7 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
   );
 }
 
-/* ─── OverlayCard — grid card with image + bottom text ─── */
+/* ── OverlayCard — grid card with image + bottom text ───────────────────── */
 export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { article: Article; section: Section; ratio?: string }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   return (
@@ -197,15 +221,12 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
               WebkitLineClamp: 3,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
+              marginBottom: "0.5rem",
             }}
           >
             <a className="text-none text-white" href={articleHref(article)}>{article.title}</a>
           </h3>
-          {article.authorName && (
-            <div className="mt-2" style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.5)" }}>
-              {article.authorName}
-            </div>
-          )}
+          <AuthorMetaDark article={article} />
         </div>
       </div>
       <a href={articleHref(article)} className="position-cover" aria-label={article.title} />
@@ -213,7 +234,7 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
   );
 }
 
-/* ─── MiniOverlayCard — compact stacked card for hero sidebar ─── */
+/* ── MiniOverlayCard — compact stacked card for hero sidebar ─────────────── */
 export function MiniOverlayCard({ article, section }: { article: Article; section: Section }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   return (
@@ -256,10 +277,12 @@ export function MiniOverlayCard({ article, section }: { article: Article; sectio
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
+              marginBottom: "0.45rem",
             }}
           >
             <a className="text-none text-white" href={articleHref(article)}>{article.title}</a>
           </h4>
+          <AuthorMetaDark article={article} />
         </div>
       </div>
       <a href={articleHref(article)} className="position-cover" aria-label={article.title} />
@@ -267,10 +290,9 @@ export function MiniOverlayCard({ article, section }: { article: Article; sectio
   );
 }
 
-/* ─── ListCard — horizontal thumbnail + text ─── */
+/* ── ListCard — horizontal thumbnail + text ─────────────────────────────── */
 export function ListCard({ article, section, showExcerpt = false }: { article: Article; section: Section; showExcerpt?: boolean }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
-  const date = formatDate(article.publishedAt);
   return (
     <article className="post type-post panel uc-transition-toggle">
       <div className="row g-3 items-start">
@@ -339,14 +361,7 @@ export function ListCard({ article, section, showExcerpt = false }: { article: A
                 {article.excerpt}
               </p>
             )}
-            <div
-              className="hstack gap-1 mt-1"
-              style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", color: "var(--color-muted)" }}
-            >
-              {article.authorName && <span className="fw-medium text-dark dark:text-white">{article.authorName}</span>}
-              {article.authorName && date && <span>&middot;</span>}
-              {date && <span>{date}</span>}
-            </div>
+            <AuthorMetaLight article={article} />
           </div>
         </div>
       </div>
@@ -354,10 +369,9 @@ export function ListCard({ article, section, showExcerpt = false }: { article: A
   );
 }
 
-/* ─── SectionFeaturedCard — wide horizontal card for section page hero ─── */
+/* ── SectionFeaturedCard — wide horizontal card for section page hero ────── */
 export function SectionFeaturedCard({ article, section }: { article: Article; section: Section }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
-  const date = formatDate(article.publishedAt);
   return (
     <article className="post type-post panel uc-transition-toggle overflow-hidden" style={{ borderRadius: "6px" }}>
       <div className="row g-0 col-match">
@@ -415,26 +429,8 @@ export function SectionFeaturedCard({ article, section }: { article: Article; se
               {article.excerpt}
             </p>
           )}
-          <div className="hstack gap-2 pt-3" style={{ borderTop: "1px solid var(--color-border)" }}>
-            {absoluteImgUrl(article.authorImage) && (
-              <img
-                src={absoluteImgUrl(article.authorImage)!}
-                alt=""
-                style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-              />
-            )}
-            <div className="vstack gap-0">
-              {article.authorName && (
-                <span style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: "0.82rem", color: "var(--color-text)" }}>
-                  {article.authorName}
-                </span>
-              )}
-              {date && (
-                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--color-muted)" }}>
-                  {date}
-                </span>
-              )}
-            </div>
+          <div style={{ paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)" }}>
+            <AuthorMetaLight article={article} />
           </div>
           <a
             href={articleHref(article)}
@@ -449,7 +445,7 @@ export function SectionFeaturedCard({ article, section }: { article: Article; se
   );
 }
 
-/* ─── Legacy aliases ─── */
+/* ── Legacy aliases ─────────────────────────────────────────────────────── */
 export function HeroArticleCard2({ article, section }: { article: Article; section: Section }) {
   return <HeroArticleCard article={article} section={section} />;
 }
