@@ -489,7 +489,7 @@ export function HorizontalCard({ article, section }: { article: Article; section
         height: "100%",
       }}
     >
-      {/* Image — left column */}
+      {/* Image — left column. Use padding-bottom trick so height is always defined */}
       <a
         href={articleHref(article)}
         style={{
@@ -498,6 +498,9 @@ export function HorizontalCard({ article, section }: { article: Article; section
           position: "relative",
           overflow: "hidden",
           display: "block",
+          /* padding-bottom aspect-ratio gives the container a real height */
+          paddingBottom: 0,
+          alignSelf: "stretch",
         }}
       >
         <img
@@ -505,17 +508,18 @@ export function HorizontalCard({ article, section }: { article: Article; section
           alt={article.title}
           className="uc-transition-scale-up"
           style={{
+            position: "absolute",
+            inset: 0,
             width: "100%",
             height: "100%",
             objectFit: "cover",
             display: "block",
-            minHeight: 140,
           }}
         />
-        {/* Reading time pill on image */}
+        {/* Reading time pill */}
         {article.readingTime && (
           <span style={{
-            position: "absolute", bottom: 8, left: 8,
+            position: "absolute", bottom: 8, left: 8, zIndex: 1,
             fontFamily: "var(--font-body)", fontSize: "0.58rem", fontWeight: 700,
             color: "white", background: "rgba(10,14,20,0.6)", backdropFilter: "blur(4px)",
             padding: "2px 7px", borderRadius: 100,

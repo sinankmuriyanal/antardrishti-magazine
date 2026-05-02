@@ -1,6 +1,6 @@
 import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { SECTIONS_DATA, getSectionByNumber } from "@/lib/sections";
-import { HeroArticleCard, MiniOverlayCard, HorizontalCard } from "@/components/public/ArticleCard";
+import { HeroArticleCard, MiniOverlayCard, OverlayCard } from "@/components/public/ArticleCard";
 import type { Article } from "@/types";
 
 export const revalidate = 3600;
@@ -16,10 +16,13 @@ export default async function HomePage() {
   const featured = articles[0];
   const heroSidebar = articles.slice(1, 4);
 
-  // Per-section: Edition 2 first, then by publishedAt desc, show up to 3
+  // IDs already shown in the hero block — never repeat them in section rows
+  const heroIds = new Set([featured?.id, ...heroSidebar.map((a) => a.id)].filter(Boolean));
+
+  // Per-section: Edition 2 first, then newest first, exclude hero articles, show up to 3
   const sectionGroups = SECTIONS_DATA.map((sec) => {
     const sectionArticles = articles
-      .filter((a) => a.sectionNumber === sec.number)
+      .filter((a) => a.sectionNumber === sec.number && !heroIds.has(a.id))
       .sort((a, b) => {
         const edDiff = (b.edition ?? 1) - (a.edition ?? 1);
         if (edDiff !== 0) return edDiff;
@@ -151,11 +154,11 @@ export default async function HomePage() {
               </a>
             </div>
 
-            {/* Cards grid — horizontal style */}
-            <div className="row child-cols-12 md:child-cols-6 lg:child-cols-4 g-4">
+            {/* Cards grid */}
+            <div className="row child-cols-12 md:child-cols-4 g-4">
               {sArticles.map((a) => (
                 <div key={a.id}>
-                  <HorizontalCard article={a} section={section} />
+                  <OverlayCard article={a} section={section} ratio="ratio-4x3" />
                 </div>
               ))}
             </div>
