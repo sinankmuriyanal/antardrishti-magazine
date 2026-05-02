@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { requireAdmin } from "@/lib/require-admin";
 
 interface Ctx { params: Promise<{ id: string }> }
 
@@ -16,6 +17,8 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const guard = await requireAdmin(req);
+  if (guard) return guard;
   const { id } = await params;
   try {
     const body = await req.json();
@@ -31,7 +34,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Ctx) {
+export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const guard = await requireAdmin(req);
+  if (guard) return guard;
   const { id } = await params;
   try {
     await adminDb.collection("authors").doc(id).delete();

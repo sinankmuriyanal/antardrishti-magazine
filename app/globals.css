@@ -44,10 +44,25 @@ h1, h2, h3, h4, h5, h6,
 /* ─── Navigation Typography ─── */
 .uc-navbar-nav > li > a {
   font-family: var(--font-body) !important;
-  font-size: 0.78rem !important;
-  letter-spacing: 0.07em !important;
+  font-size: 0.74rem !important;
+  letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
   font-weight: 600 !important;
+  white-space: nowrap;
+}
+
+/* Keep navbar on a single row at every breakpoint */
+.uc-center-navbar .uc-navbar {
+  flex-wrap: nowrap !important;
+}
+.uc-center-navbar .uc-navbar-left,
+.uc-center-navbar .uc-navbar-right {
+  flex-shrink: 0;
+}
+.uc-center-navbar .uc-navbar-center {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
 }
 
 /* ─── Navbar — always dark, never transparent ─── */
@@ -128,9 +143,11 @@ article.post.type-post {
   overflow: hidden !important;
 }
 
-/* Image zoom on hover */
+/* Image zoom on hover — keep image visible by default (UIKit sets opacity:0) */
 .post.type-post .uc-transition-scale-up,
-article .uc-transition-scale-up {
+article .uc-transition-scale-up,
+.uc-transition-toggle .uc-transition-scale-up {
+  opacity: 1 !important;
   transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 }
 

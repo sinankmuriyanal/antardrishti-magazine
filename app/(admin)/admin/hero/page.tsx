@@ -1,6 +1,7 @@
 "use client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
+import { authedFetch } from "@/lib/auth-client";
 import type { Article } from "@/types";
 
 interface HeroConfig { featuredId: string | null; sidebarIds: string[] }
@@ -43,14 +44,14 @@ export default function HeroAdmin() {
         ...c,
         sidebarIds: has
           ? c.sidebarIds.filter((x) => x !== id)
-          : c.sidebarIds.length < 3 ? [...c.sidebarIds, id] : c.sidebarIds,
+          : c.sidebarIds.length < 2 ? [...c.sidebarIds, id] : c.sidebarIds,
       };
     });
   }
 
   async function handleSave() {
     setSaving(true); setSaved(false);
-    await fetch("/api/hero", {
+    await authedFetch("/api/hero", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(config),
@@ -69,7 +70,7 @@ export default function HeroAdmin() {
           <div>
             <h1 className="text-xl font-bold text-gray-900">Hero Section</h1>
             <p className="text-sm text-gray-400 mt-0.5">
-              Pick 1 featured article + up to 3 sidebar articles shown in the homepage hero block.
+              Pick 1 featured article + up to 2 sidebar articles shown in the homepage hero block.
             </p>
           </div>
           <button

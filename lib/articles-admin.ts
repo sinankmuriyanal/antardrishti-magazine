@@ -3,9 +3,10 @@
  * so Firestore security rules are bypassed. Use these in admin client components only.
  */
 import type { Article } from "@/types";
+import { authedFetch } from "@/lib/auth-client";
 
 async function apiCall(url: string, opts?: RequestInit) {
-  const res = await fetch(url, { ...opts, headers: { "Content-Type": "application/json", ...(opts?.headers ?? {}) } });
+  const res = await authedFetch(url, { ...opts, headers: { "Content-Type": "application/json", ...(opts?.headers ?? {}) } });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`);

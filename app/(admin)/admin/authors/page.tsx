@@ -3,6 +3,7 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState, useRef } from "react";
 import { slugify } from "@/lib/utils";
+import { authedFetch } from "@/lib/auth-client";
 import type { Author } from "@/types";
 
 const inputCls = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white";
@@ -68,7 +69,7 @@ export default function AuthorsAdmin() {
       const form = new FormData();
       form.append("file", file);
       form.append("path", `authors/uploads/${Date.now()}-${file.name}`);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const res = await authedFetch("/api/upload", { method: "POST", body: form });
       if (!res.ok) throw new Error(await res.text());
       const { url } = await res.json();
       setField("photo", url);
@@ -83,7 +84,7 @@ export default function AuthorsAdmin() {
     setError("");
     try {
       if (editing) {
-        const res = await fetch(`/api/authors/${editing.id}`, {
+        const res = await authedFetch(`/api/authors/${editing.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: form.name, bio: form.bio, photo: form.photo, linkedin: form.linkedin }),
@@ -91,7 +92,7 @@ export default function AuthorsAdmin() {
         if (!res.ok) throw new Error(await res.text());
         setAuthors((prev) => prev.map((a) => a.id === editing.id ? { ...a, ...form } : a));
       } else {
-        const res = await fetch("/api/authors", {
+        const res = await authedFetch("/api/authors", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
@@ -109,7 +110,7 @@ export default function AuthorsAdmin() {
   async function handleDelete(a: Author) {
     if (!confirm(`Delete author "${a.name}"? Articles linked to this author will still show their name.`)) return;
     try {
-      const res = await fetch(`/api/authors/${a.id}`, { method: "DELETE" });
+      const res = await authedFetch(`/api/authors/${a.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(await res.text());
       setAuthors((prev) => prev.filter((x) => x.id !== a.id));
     } catch (e) { setError(String(e)); }
@@ -168,14 +169,14 @@ export default function AuthorsAdmin() {
 
       await Promise.all([
         ...toCreate.map((author) =>
-          fetch("/api/authors", {
+          authedFetch("/api/authors", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(author),
           })
         ),
         ...toUpdate.map(({ id, photo }) =>
-          fetch(`/api/authors/${id}`, {
+          authedFetch(`/api/authors/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ photo }),

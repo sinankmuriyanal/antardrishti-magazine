@@ -7,6 +7,7 @@ import ImageExtension from "@tiptap/extension-image";
 import LinkExtension from "@tiptap/extension-link";
 import { SECTIONS_DATA } from "@/lib/sections";
 import { slugify, calcReadingTime } from "@/lib/utils";
+import { authedFetch } from "@/lib/auth-client";
 import type { Article } from "@/types";
 
 interface Props {
@@ -116,7 +117,7 @@ export function ArticleForm({ initial, onSave, saving }: Props) {
     const form = new FormData();
     form.append("file", file);
     form.append("path", path);
-    const res = await fetch("/api/upload", { method: "POST", body: form });
+    const res = await authedFetch("/api/upload", { method: "POST", body: form });
     if (!res.ok) throw new Error(await res.text());
     const { url } = await res.json();
     return url;

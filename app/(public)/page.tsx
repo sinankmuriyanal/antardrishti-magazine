@@ -1,7 +1,7 @@
 import { fetchArticlesServer as fetchArticles } from "@/lib/articles-server";
 import { adminDb } from "@/lib/firebase-admin";
 import { getSectionByNumber } from "@/lib/sections";
-import { HeroArticleCard, SidebarArticleCard, OverlayCard } from "@/components/public/ArticleCard";
+import { HeroArticleCard, OverlayCard } from "@/components/public/ArticleCard";
 import type { Article } from "@/types";
 
 export const revalidate = 3600;
@@ -32,9 +32,10 @@ export default async function HomePage() {
   const featured: Article | undefined =
     (heroConfig.featuredId ? byId.get(heroConfig.featuredId) : undefined) ?? articles[0];
 
-  const heroSidebar: Article[] = heroConfig.sidebarIds.length > 0
+  const heroSidebar: Article[] = (heroConfig.sidebarIds.length > 0
     ? (heroConfig.sidebarIds.map((id) => byId.get(id)).filter(Boolean) as Article[])
-    : articles.filter((a) => a.id !== featured?.id).slice(0, 3);
+    : articles.filter((a) => a.id !== featured?.id).slice(0, 2)
+  ).slice(0, 2);
 
   const heroIds = new Set([featured?.id, ...heroSidebar.map((a) => a.id)].filter(Boolean) as string[]);
 
@@ -82,15 +83,18 @@ export default async function HomePage() {
                 <HeroArticleCard article={featured} section={getSectionByNumber(featured.sectionNumber)!} />
               </div>
             )}
-            {/* Sidebar — explorer-style dark cards */}
+            {/* Sidebar — same OverlayCard style as the rest of the grid */}
             {heroSidebar.length > 0 && (
               <div className="col-12 lg:col-4">
                 <div className="vstack gap-3 h-100">
-                  {heroSidebar.map((a) => (
-                    <div key={a.id} className="flex-fill" style={{ minHeight: 0 }}>
-                      <SidebarArticleCard article={a} section={getSectionByNumber(a.sectionNumber)!} />
-                    </div>
-                  ))}
+                  {heroSidebar.map((a) => {
+                    const sec = getSectionByNumber(a.sectionNumber);
+                    return sec ? (
+                      <div key={a.id} className="flex-fill" style={{ minHeight: 0 }}>
+                        <OverlayCard article={a} section={sec} ratio="ratio-4x3" />
+                      </div>
+                    ) : null;
+                  })}
                 </div>
               </div>
             )}
@@ -144,13 +148,13 @@ export default async function HomePage() {
               </a>
             </div>
 
-            {/* 3 columns × 2 rows — same layout as Latest Reads */}
+            {/* 3 columns × 2 rows — same layout as Latest Reads, with views badge */}
             <div className="row child-cols-12 sm:child-cols-6 lg:child-cols-4 g-4">
               {popularReads.map((a) => {
                 const sec = getSectionByNumber(a.sectionNumber);
                 return sec ? (
                   <div key={a.id}>
-                    <OverlayCard article={a} section={sec} ratio="ratio-4x3" />
+                    <OverlayCard article={a} section={sec} ratio="ratio-4x3" showViews />
                   </div>
                 ) : null;
               })}

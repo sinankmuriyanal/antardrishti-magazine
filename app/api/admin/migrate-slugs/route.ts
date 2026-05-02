@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { slugify } from "@/lib/utils";
+import { requireAdmin } from "@/lib/require-admin";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const guard = await requireAdmin(req);
+  if (guard) return guard;
   try {
     const snap = await adminDb.collection("articles").get();
 

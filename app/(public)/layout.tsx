@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 };
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
   { href: "/section/editorial", label: "Editorial" },
   { href: "/section/management", label: "Management" },
   { href: "/section/analytics", label: "Analytics" },
@@ -81,48 +80,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         >
           <nav className="uc-navbar-container fs-6 z-1">
 
-            {/* Top bar — DSE banner */}
-            <div
-              className="uc-top-navbar panel z-3 min-h-40px mx-2 rounded-bottom overflow-hidden uc-dark d-none md:d-block"
-              data-uc-navbar=" animation: uc-animation-slide-top-small; duration: 150;"
-            >
-              <div
-                className="position-cover"
-                data-src="/assets/images/demo-three/topbar-abstract.jpg"
-                data-uc-img
-              ></div>
-              <div className="container max-w-xl">
-                <div className="hstack panel z-1 min-h-40px">
-                  <div className="uc-navbar-left">
-                    <span
-                      className="opacity-75"
-                      style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", fontWeight: 500, letterSpacing: "0.06em", color: "rgba(255,255,255,0.8)" }}
-                    >
-                      <i className="icon-1 unicon-fire text-warning me-1"></i>
-                      Antardrishti &mdash; DSE MBA Business Analytics
-                    </span>
-                  </div>
-                  <div className="uc-navbar-right gap-2">
-                    <ul className="nav-x gap-1 d-none lg:d-flex">
-                      {SOCIAL_LINKS.map((s) => (
-                        <li key={s.href}>
-                          <a
-                            href={s.href}
-                            target={s.href.startsWith("http") ? "_blank" : undefined}
-                            rel={s.href.startsWith("http") ? "noreferrer" : undefined}
-                            className="w-28px h-28px cstack border rounded-circle text-white border-white border-opacity-20 hover:bg-primary hover:border-primary transition-colors duration-200"
-                            aria-label={s.label}
-                          >
-                            <i className={`icon-1 ${s.icon}`}></i>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Center navbar */}
             <div className="uc-center-navbar panel z-2">
               <div className="container max-w-xl">
@@ -130,27 +87,44 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   className="uc-navbar min-h-68px lg:min-h-80px text-gray-900 dark:text-white"
                   data-uc-navbar=" animation: uc-animation-slide-top-small; duration: 150;"
                 >
-                  <div className="uc-navbar-left gap-4">
-                    {/* Hamburger + Search (mobile) — React-controlled */}
+                  {/* LEFT — hamburger/search on mobile, logo on desktop */}
+                  <div className="uc-navbar-left">
                     <div className="d-block lg:d-none" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       <MobileNav />
                       <SearchOverlay />
                     </div>
-                    {/* Logo (desktop) */}
-                    <div className="uc-logo d-none md:d-block">
+                    <div className="uc-logo d-none lg:d-block">
                       <a href="/">
                         <img
                           src="/assets/images/common/White Logo.png"
                           alt="Antardrishti"
                           data-uc-svg
-                          style={{ height: 46, width: "auto" }}
+                          style={{ height: 42, width: "auto" }}
                         />
                       </a>
                     </div>
-                    {/* Nav links */}
+                  </div>
+
+                  {/* CENTER — mobile logo, OR desktop nav links between logo and search */}
+                  <div className="uc-navbar-center">
+                    <div className="uc-logo d-block lg:d-none" style={{ padding: "10px 0" }}>
+                      <a href="/">
+                        <img
+                          src="/assets/images/common/White Logo.png"
+                          alt="Antardrishti"
+                          data-uc-svg
+                          style={{ height: 36, width: "auto" }}
+                        />
+                      </a>
+                    </div>
                     <ul
-                      className="uc-navbar-nav gap-3 ms-2 d-none lg:d-flex"
-                      style={{ "--uc-nav-height": "80px" } as React.CSSProperties}
+                      className="uc-navbar-nav d-none lg:d-flex"
+                      style={{
+                        "--uc-nav-height": "80px",
+                        gap: "1.05rem",
+                        flexWrap: "nowrap",
+                        whiteSpace: "nowrap",
+                      } as React.CSSProperties}
                     >
                       {NAV_LINKS.map((l) => (
                         <li key={l.href}>
@@ -160,21 +134,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     </ul>
                   </div>
 
-                  {/* Logo (mobile center) */}
-                  <div className="uc-navbar-center">
-                    <div className="uc-logo d-block md:d-none" style={{ padding: "10px 0" }}>
-                      <a href="/">
-                        <img
-                          src="/assets/images/common/White Logo.png"
-                          alt="Antardrishti"
-                          data-uc-svg
-                          style={{ height: 38, width: "auto" }}
-                        />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Right — theme toggle only (search moved to left on mobile) */}
+                  {/* RIGHT — search + theme on desktop, theme only on mobile */}
                   <div className="uc-navbar-right gap-1">
                     <div className="d-none lg:d-block">
                       <SearchOverlay />

@@ -1,8 +1,6 @@
 import {
   collection,
   getDocs,
-  doc,
-  getDoc,
   query,
   orderBy,
 } from "firebase/firestore";

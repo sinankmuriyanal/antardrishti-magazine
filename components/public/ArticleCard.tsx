@@ -153,10 +153,9 @@ export function HeroArticleCard({ article, section }: { article: Article; sectio
       {/* Force landscape: 16:9, no portrait */}
       <div style={{ position: "relative", aspectRatio: "16/9", width: "100%", overflow: "hidden" }}>
         <img
-          className="media-cover image uc-transition-scale-up"
           src={img}
           alt={article.title}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
         />
         <div className="position-cover" style={{
           background: "linear-gradient(to top, rgba(10,14,20,0.96) 0%, rgba(10,14,20,0.55) 45%, rgba(10,14,20,0.05) 85%, transparent 100%)",
@@ -262,8 +261,9 @@ export function SidebarArticleCard({ article, section }: { article: Article; sec
 }
 
 /* ── OverlayCard — grid card with image + bottom text ───────────────────── */
-export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { article: Article; section: Section; ratio?: string }) {
+export function OverlayCard({ article, section, ratio = "ratio-16x9", showViews = false }: { article: Article; section: Section; ratio?: string; showViews?: boolean }) {
   const img = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
+  const views = showViews ? ((article as Article & { totalViews?: number }).totalViews ?? 0) : 0;
   return (
     <article
       className="post type-post panel uc-transition-toggle overflow-hidden h-100"
@@ -280,6 +280,19 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9" }: { articl
           background: "linear-gradient(to top, rgba(10,14,20,0.94) 0%, rgba(10,14,20,0.3) 55%, transparent 100%)",
         }} />
         <AuthorTopPill article={article} />
+        {/* Views badge — top-left, shown only on popular cards */}
+        {showViews && views > 0 && (
+          <span style={{
+            position: "absolute", top: 10, left: 10, zIndex: 3,
+            fontFamily: "var(--font-body)", fontSize: "0.58rem", fontWeight: 700,
+            color: "white", background: "rgba(10,14,20,0.62)", backdropFilter: "blur(4px)",
+            padding: "3px 8px", borderRadius: 100,
+            border: "1px solid rgba(255,255,255,0.15)",
+            display: "flex", alignItems: "center", gap: 4,
+          }}>
+            <i className="unicon-eye" style={{ fontSize: "0.6rem" }} /> {views.toLocaleString()}
+          </span>
+        )}
         <div className="position-absolute bottom-0 start-0 end-0 p-3 z-1">
           <div style={{ marginBottom: "0.4rem" }}>
             <a href={sectionHref(section)} className="text-none">

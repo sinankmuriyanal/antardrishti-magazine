@@ -4,12 +4,15 @@ import { join } from "path";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { readFile } from "fs/promises";
+import { requireAdmin } from "@/lib/require-admin";
 
 const execFileAsync = promisify(execFile);
 
 const SECTION_OFFSETS: Record<number, number> = { 1: 1, 2: 3, 3: 4, 4: 3, 5: 3, 6: 4 };
 
 export async function POST(req: NextRequest) {
+  const guard = await requireAdmin(req);
+  if (guard) return guard;
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

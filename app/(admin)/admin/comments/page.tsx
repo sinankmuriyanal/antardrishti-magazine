@@ -2,6 +2,7 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
+import { authedFetch } from "@/lib/auth-client";
 import type { Comment } from "@/types";
 export default function CommentsAdmin() {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -11,7 +12,7 @@ export default function CommentsAdmin() {
   async function load() {
     setLoading(true);
     try {
-      const data = await fetch("/api/comments").then((r) => r.json() as Promise<Comment[]>);
+      const data = await authedFetch("/api/comments").then((r) => r.json() as Promise<Comment[]>);
       setComments(data);
     } catch { setComments([]); }
     setLoading(false);
@@ -20,13 +21,13 @@ export default function CommentsAdmin() {
   useEffect(() => { load(); }, []);
 
   async function handleApprove(c: Comment) {
-    await fetch(`/api/comments/${c.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isApproved: true }) });
+    await authedFetch(`/api/comments/${c.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isApproved: true }) });
     setComments((prev) => prev.map((x) => x.id === c.id ? { ...x, isApproved: true } : x));
   }
 
   async function handleDelete(c: Comment) {
     if (!confirm("Delete this comment?")) return;
-    await fetch(`/api/comments/${c.id}`, { method: "DELETE" });
+    await authedFetch(`/api/comments/${c.id}`, { method: "DELETE" });
     setComments((prev) => prev.filter((x) => x.id !== c.id));
   }
 

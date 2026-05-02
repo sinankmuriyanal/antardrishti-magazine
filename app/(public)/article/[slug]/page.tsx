@@ -30,13 +30,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const article = await resolveArticle(slug);
     if (!article) return {};
+    const path = `/article/${article.slug || article.displayId}`;
+    const ogImage = absoluteImgUrl(article.featuredImage);
     return {
       title: article.title,
       description: article.excerpt,
+      alternates: { canonical: path },
       openGraph: {
+        type: "article",
         title: article.title,
         description: article.excerpt,
-        images: article.featuredImage ? [article.featuredImage] : [],
+        url: path,
+        images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: article.title }] : [],
+        authors: article.authorName ? [article.authorName] : undefined,
+        section: getSectionByNumber(article.sectionNumber)?.name,
+        tags: article.tags,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: article.title,
+        description: article.excerpt,
+        images: ogImage ? [ogImage] : [],
       },
     };
   } catch { return {}; }
@@ -68,13 +82,43 @@ export default async function ArticlePage({ params }: Props) {
     ? new Date(epochMs).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : "";
 
-  const shareUrl = `https://antardrishti-magazine.vercel.app/article/${article.slug || article.displayId}`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://antardrishti-magazine.vercel.app";
+  const shareUrl = `${siteUrl}/article/${article.slug || article.displayId}`;
 
   const coverImg = absoluteImgUrl(article.featuredImage) ?? FALLBACK;
   const authorImgUrl = absoluteImgUrl(article.authorImage);
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt,
+    image: coverImg,
+    datePublished: epochMs ? new Date(epochMs).toISOString() : undefined,
+    dateModified: ((article.updatedAt as { _seconds?: number; seconds?: number } | null)?._seconds ?? (article.updatedAt as { seconds?: number } | null)?.seconds)
+      ? new Date(((article.updatedAt as { _seconds?: number; seconds?: number } | null)?._seconds ?? (article.updatedAt as { seconds?: number } | null)?.seconds ?? 0) * 1000).toISOString()
+      : (epochMs ? new Date(epochMs).toISOString() : undefined),
+    author: article.authorName ? {
+      "@type": "Person",
+      name: article.authorName,
+      url: article.authorLinkedIn || undefined,
+    } : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "Antardrishti — DSE MBA Business Analytics",
+      logo: { "@type": "ImageObject", url: `${siteUrl}/assets/images/common/White Logo.png` },
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": shareUrl },
+    articleSection: section?.name,
+    keywords: article.tags?.join(", "),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       {/* ── Dark header block — full dark bg covers breadcrumb + header + image ── */}
       <div style={{ background: "var(--color-ink, #0F1923)" }}>
 

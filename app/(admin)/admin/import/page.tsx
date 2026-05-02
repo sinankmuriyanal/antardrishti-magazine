@@ -2,6 +2,7 @@
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useState } from "react";
+import { authedFetch } from "@/lib/auth-client";
 
 type Step = "idle" | "uploading" | "preview" | "importing" | "done" | "error";
 
@@ -31,7 +32,7 @@ export default function ImportPage() {
     form.append("file", file);
 
     try {
-      const res = await fetch("/api/import", { method: "POST", body: form });
+      const res = await authedFetch("/api/import", { method: "POST", body: form });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Upload failed");
       setPreview(json.articles ?? []);
@@ -45,7 +46,7 @@ export default function ImportPage() {
   async function handleConfirmImport() {
     setStep("importing");
     try {
-      const res = await fetch("/api/import/confirm", { method: "POST", body: JSON.stringify({ articles: preview }), headers: { "Content-Type": "application/json" } });
+      const res = await authedFetch("/api/import/confirm", { method: "POST", body: JSON.stringify({ articles: preview }), headers: { "Content-Type": "application/json" } });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Import failed");
       setLog(json.log ?? []);

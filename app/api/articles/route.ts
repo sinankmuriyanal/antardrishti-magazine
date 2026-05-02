@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { requireAdmin } from "@/lib/require-admin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireAdmin(req);
+  if (guard) return guard;
   try {
     const body = await req.json();
     const id = body.displayId as string;

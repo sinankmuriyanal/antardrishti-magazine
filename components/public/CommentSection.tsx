@@ -29,6 +29,7 @@ export function CommentSection({ articleId }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [content, setContent] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   useEffect(() => {
@@ -41,16 +42,20 @@ export function CommentSection({ articleId }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !content.trim()) return;
+    if (name.length > 80 || content.length > 2000 || email.length > 200) {
+      setStatus("error");
+      return;
+    }
     setStatus("sending");
     try {
       const res = await fetch("/api/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ articleId, authorName: name, authorEmail: email, content }),
+        body: JSON.stringify({ articleId, authorName: name, authorEmail: email, content, website }),
       });
       if (!res.ok) throw new Error("Failed");
       setStatus("sent");
-      setName(""); setEmail(""); setContent("");
+      setName(""); setEmail(""); setContent(""); setWebsite("");
     } catch {
       setStatus("error");
     }
@@ -128,6 +133,8 @@ export function CommentSection({ articleId }: Props) {
                   lineHeight: 1.65,
                   color: "#2a2d35",
                   margin: 0,
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "anywhere",
                 }}
               >
                 {c.content}
@@ -176,6 +183,17 @@ export function CommentSection({ articleId }: Props) {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="vstack gap-3">
+            {/* Honeypot — hidden from users, bots fill it and get silently rejected */}
+            <input
+              type="text"
+              name="website"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+            />
             <div className="row g-3">
               <div className="col-12 md:col-6">
                 <label

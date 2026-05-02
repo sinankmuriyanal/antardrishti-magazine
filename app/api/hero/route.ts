@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/require-admin";
 
 const DOC = "heroConfig";
 
@@ -16,6 +17,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireAdmin(req);
+  if (guard) return guard;
   try {
     const body = await req.json();
     await adminDb.collection("config").doc(DOC).set(

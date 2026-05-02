@@ -3,6 +3,7 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState } from "react";
 import { adminFetchArticles, adminUpdateArticle, adminDeleteArticle } from "@/lib/articles-admin";
+import { authedFetch } from "@/lib/auth-client";
 import { SECTIONS_DATA } from "@/lib/sections";
 import type { Article } from "@/types";
 
@@ -94,7 +95,7 @@ export default function ArticlesAdmin() {
     setSluggging(true);
     setSlugMsg("");
     try {
-      const res = await fetch("/api/admin/migrate-slugs", { method: "POST" });
+      const res = await authedFetch("/api/admin/migrate-slugs", { method: "POST" });
       const data = await res.json() as { updated?: number; message?: string; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Failed");
       setSlugMsg(data.message ?? `Updated ${data.updated} articles.`);

@@ -1,6 +1,7 @@
 "use client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useEffect, useState, useRef } from "react";
+import { authedFetch } from "@/lib/auth-client";
 
 interface Member {
   id: string; name: string; role: string; photo: string;
@@ -38,7 +39,7 @@ export default function TeamAdmin() {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("path", `team/uploads/${Date.now()}-${file.name}`);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const res = await authedFetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) throw new Error(await res.text());
       const { url } = await res.json();
       setField("photo", url);
@@ -52,13 +53,13 @@ export default function TeamAdmin() {
     setSaving(true); setError("");
     try {
       if (editing) {
-        const res = await fetch(`/api/team/${editing.id}`, {
+        const res = await authedFetch(`/api/team/${editing.id}`, {
           method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
         });
         if (!res.ok) throw new Error(await res.text());
         setMembers((prev) => prev.map((m) => m.id === editing.id ? { ...m, ...form } : m));
       } else {
-        const res = await fetch("/api/team", {
+        const res = await authedFetch("/api/team", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
         });
         if (!res.ok) throw new Error(await res.text());
@@ -71,7 +72,7 @@ export default function TeamAdmin() {
 
   async function handleDelete(m: Member) {
     if (!confirm(`Delete ${m.name}?`)) return;
-    await fetch(`/api/team/${m.id}`, { method: "DELETE" });
+    await authedFetch(`/api/team/${m.id}`, { method: "DELETE" });
     setMembers((prev) => prev.filter((x) => x.id !== m.id));
   }
 
