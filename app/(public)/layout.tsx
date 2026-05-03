@@ -84,7 +84,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <div className="uc-center-navbar panel z-2">
               <div className="container max-w-xl">
                 <div
-                  className="uc-navbar min-h-76px lg:min-h-80px text-gray-900 dark:text-white"
+                  className="uc-navbar lg:min-h-80px text-gray-900 dark:text-white"
+                  style={{ minHeight: "76px" }}
                   data-uc-navbar=" animation: uc-animation-slide-top-small; duration: 150;"
                 >
                   {/* LEFT — hamburger on mobile, logo on desktop */}

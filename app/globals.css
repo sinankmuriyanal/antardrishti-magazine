@@ -54,6 +54,20 @@ h1, h2, h3, h4, h5, h6,
 /* Keep navbar on a single row at every breakpoint */
 .uc-center-navbar .uc-navbar {
   flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+
+/* Mobile: ensure logo centre-section fills height and centres logo */
+@media (max-width: 1023px) {
+  .uc-center-navbar .uc-navbar-center {
+    display: flex !important;
+    align-items: center !important;
+  }
+  .uc-center-navbar .uc-navbar-left,
+  .uc-center-navbar .uc-navbar-right {
+    display: flex !important;
+    align-items: center !important;
+  }
 }
 .uc-center-navbar .uc-navbar-left,
 .uc-center-navbar .uc-navbar-right {
