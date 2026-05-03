@@ -57,7 +57,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       className={className}
       aria-label="Toggle dark mode"
       title={dark ? "Switch to light mode" : "Switch to dark mode"}
-      style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+      style={{ border: "none", cursor: "pointer", padding: 0 }}
     >
       <i className={`icon-2 ${dark ? "unicon-sun" : "unicon-moon"}`} />
     </button>

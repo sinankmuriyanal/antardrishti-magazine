@@ -63,7 +63,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
         {/* ── Back to top + dark mode toggle ── */}
         <div className="backtotop-wrap position-fixed bottom-0 end-0 z-99 m-2 vstack gap-1">
-          <ThemeToggle className="cstack w-40px h-40px rounded-circle text-none bg-gray-100 dark:bg-gray-700 dark:text-white" />
+          <ThemeToggle className="cstack w-40px h-40px rounded-circle bg-ink text-white" />
           <a
             className="btn btn-sm bg-primary text-white w-40px h-40px rounded-circle"
             href="to_top"
@@ -84,7 +84,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <div className="uc-center-navbar panel z-2">
               <div className="container max-w-xl">
                 <div
-                  className="uc-navbar min-h-68px lg:min-h-80px text-gray-900 dark:text-white"
+                  className="uc-navbar min-h-76px lg:min-h-80px text-gray-900 dark:text-white"
                   data-uc-navbar=" animation: uc-animation-slide-top-small; duration: 150;"
                 >
                   {/* LEFT — hamburger on mobile, logo on desktop */}
@@ -106,7 +106,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
                   {/* CENTER — mobile logo, OR desktop nav links between logo and search */}
                   <div className="uc-navbar-center">
-                    <div className="uc-logo d-block lg:d-none" style={{ padding: "10px 0" }}>
+                    <div className="uc-logo d-block lg:d-none" style={{ padding: "18px 0" }}>
                       <a href="/">
                         <img
                           src="/assets/images/common/White Logo.png"
@@ -133,10 +133,12 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     </ul>
                   </div>
 
-                  {/* RIGHT — search + theme on both mobile and desktop */}
+                  {/* RIGHT — search always, theme toggle desktop-only */}
                   <div className="uc-navbar-right gap-1">
                     <SearchOverlay />
-                    <ThemeToggle className="btn border-0 p-0 w-36px h-36px cstack text-dark dark:text-white hover:text-primary transition-colors duration-200 ms-1" />
+                    <div className="d-none lg:d-block">
+                      <ThemeToggle className="btn border-0 p-0 w-36px h-36px cstack text-dark dark:text-white hover:text-primary transition-colors duration-200 ms-1" />
+                    </div>
                   </div>
                 </div>
               </div>
