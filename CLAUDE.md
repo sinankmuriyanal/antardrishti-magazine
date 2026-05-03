@@ -188,3 +188,4 @@ Edition-2 articles (from docx) continue from the edition-1 max per section:
 - [2026-05-03] update: (public)/layout.tsx,(public)/page.tsx,public/ArticleCard.tsx
 - [2026-05-03] update: (admin)/admin/articles/page.tsx,(admin)/admin/authors/page.tsx,(admin)/admin/comments/page.tsx,(admin)/admin/hero/page.tsx,(admin)/admin/import/page.tsx,(admin)/admin/team/page.tsx
 - [2026-05-03] fix: search to top-right on mobile, dark mode tokens + sync, views label
+- [2026-05-03] fix: mobile nav — remove theme toggle, fix floating button icon, increase logo padding
