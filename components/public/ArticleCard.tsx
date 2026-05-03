@@ -290,7 +290,7 @@ export function OverlayCard({ article, section, ratio = "ratio-16x9", showViews 
             border: "1px solid rgba(255,255,255,0.15)",
             display: "flex", alignItems: "center", gap: 4,
           }}>
-            <i className="unicon-eye" style={{ fontSize: "0.6rem" }} /> {views.toLocaleString()}
+            <i className="unicon-eye" style={{ fontSize: "0.6rem" }} /> {views.toLocaleString()} views
           </span>
         )}
         <div className="position-absolute bottom-0 start-0 end-0 p-3 z-1">

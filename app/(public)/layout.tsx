@@ -87,11 +87,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   className="uc-navbar min-h-68px lg:min-h-80px text-gray-900 dark:text-white"
                   data-uc-navbar=" animation: uc-animation-slide-top-small; duration: 150;"
                 >
-                  {/* LEFT — hamburger/search on mobile, logo on desktop */}
+                  {/* LEFT — hamburger on mobile, logo on desktop */}
                   <div className="uc-navbar-left">
-                    <div className="d-block lg:d-none" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    <div className="d-block lg:d-none">
                       <MobileNav />
-                      <SearchOverlay />
                     </div>
                     <div className="uc-logo d-none lg:d-block">
                       <a href="/">
@@ -134,11 +133,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     </ul>
                   </div>
 
-                  {/* RIGHT — search + theme on desktop, theme only on mobile */}
+                  {/* RIGHT — search + theme on both mobile and desktop */}
                   <div className="uc-navbar-right gap-1">
-                    <div className="d-none lg:d-block">
-                      <SearchOverlay />
-                    </div>
+                    <SearchOverlay />
                     <ThemeToggle className="btn border-0 p-0 w-36px h-36px cstack text-dark dark:text-white hover:text-primary transition-colors duration-200 ms-1" />
                   </div>
                 </div>

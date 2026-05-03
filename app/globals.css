@@ -608,6 +608,34 @@ article:hover .uc-transition-scale-up {
   display: block;
 }
 
+/* ─── Dark mode design tokens ─── */
+.dark {
+  --color-warm-bg: #12192a;
+  --color-warm-bg-2: #0d1320;
+  --color-border: rgba(255,255,255,0.1);
+  --color-text: #dde2ec;
+  --color-muted: #8a919e;
+  --color-surface: #111827;
+}
+
+/* ─── Dark mode base — body and page wrapper ─── */
+.dark body,
+.dark .uni-body {
+  background-color: #0e1520 !important;
+  color: var(--color-text) !important;
+}
+
+/* ─── Dark mode section panel backgrounds
+       !important overrides the inline style={{ background }} values ─── */
+.dark .section.panel {
+  background-color: var(--color-surface, #111827) !important;
+}
+
+/* ─── Dark mode article body area ─── */
+.dark .article-body-bg {
+  background-color: var(--color-surface, #111827) !important;
+}
+
 /* ─── Darkmode overrides ─── */
 .dark .post-content p,
 .dark .post-content li {

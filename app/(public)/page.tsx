@@ -74,7 +74,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════
           ZONE 1 — HERO  (admin-curated)
       ════════════════════════════════════════════════ */}
-      <div className="section panel" style={{ background: "#F4F2EF", paddingTop: "1.75rem", paddingBottom: "1.75rem" }}>
+      <div className="section panel" style={{ background: "var(--color-warm-bg-2, #F4F2EF)", paddingTop: "1.75rem", paddingBottom: "1.75rem" }}>
         <div className="container max-w-xl">
           <div className="row g-3 col-match">
             {/* Main hero — landscape */}
@@ -136,7 +136,7 @@ export default async function HomePage() {
           ZONE 3 — MOST POPULAR
       ════════════════════════════════════════════════ */}
       {popularReads.length > 0 && (
-        <div className="section panel py-6 lg:py-8" style={{ background: "#fff" }}>
+        <div className="section panel py-6 lg:py-8" style={{ background: "var(--color-surface, #fff)" }}>
           <div className="container max-w-xl">
             <div className="mag-section-header" style={{ marginBottom: "1.75rem" }}>
               <div className="mag-section-header__left">

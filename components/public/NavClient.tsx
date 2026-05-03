@@ -23,6 +23,14 @@ const SOCIAL_LINKS = [
 function applyTheme(dark: boolean) {
   document.documentElement.classList.toggle("dark", dark);
   try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch { /* */ }
+  window.dispatchEvent(new CustomEvent("themechange", { detail: { dark } }));
+}
+
+function readTheme(): boolean {
+  try {
+    const saved = localStorage.getItem("theme");
+    return saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch { return false; }
 }
 
 /* ── Theme toggle button ────────────────────────────────────────────────── */
@@ -30,11 +38,11 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = saved ? saved === "dark" : prefersDark;
-    setDark(isDark);
-    applyTheme(isDark);
+    setDark(readTheme());
+    const handler = (e: Event) =>
+      setDark((e as CustomEvent<{ dark: boolean }>).detail.dark);
+    window.addEventListener("themechange", handler);
+    return () => window.removeEventListener("themechange", handler);
   }, []);
 
   function toggle() {
@@ -151,9 +159,11 @@ export function MobileNav() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setDark(saved ? saved === "dark" : prefersDark);
+    setDark(readTheme());
+    const handler = (e: Event) =>
+      setDark((e as CustomEvent<{ dark: boolean }>).detail.dark);
+    window.addEventListener("themechange", handler);
+    return () => window.removeEventListener("themechange", handler);
   }, []);
 
   function toggleTheme() {
